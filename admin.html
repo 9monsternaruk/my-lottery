@@ -2,183 +2,85 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบจัดการแผงหวย (Admin)</title>
-    <!-- โหลด Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแอดมิน - แผงหวยออนไลน์</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- โหลด Font Niramit -->
-    <link href="https://fonts.googleapis.com/css2?family=Niramit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Niramit', sans-serif; background-color: #f3f4f6; }
-        .tab-active { border-bottom: 2px solid #10b981; color: #10b981; font-weight: 700; }
-        .tab-inactive { color: #6b7280; font-weight: 500; }
-        /* Loader */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; } </style>
 </head>
-<body class="text-gray-800 antialiased pb-20">
+<body class="p-4 md:p-10">
 
-    <!-- ==================== VIEW 1: LOGIN ==================== -->
-    <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 text-center">
-            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">เข้าสู่ระบบหลังบ้าน</h1>
-            <p class="text-sm text-gray-500 mb-6">สำหรับเจ้าของแผงหวยออนไลน์</p>
-            
-            <form id="login-form" class="space-y-4 text-left" onsubmit="event.preventDefault(); handleLogin();">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">อีเมลแอดมิน</label>
-                    <input type="email" id="admin-email" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="admin@example.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                    <input type="password" id="admin-password" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="••••••••">
-                </div>
-                <button type="submit" id="btn-login" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition flex justify-center items-center gap-2 mt-4">
-                    เข้าสู่ระบบ
-                </button>
-            </form>
-        </div>
+    <!-- Login Area -->
+    <div id="login-section" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
+        <h2 class="text-2xl font-bold text-center mb-6">🔑 แอดมินล็อกอิน</h2>
+        <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded mb-4 outline-none">
+        <input type="password" id="password" placeholder="Password" class="w-full p-3 border rounded mb-6 outline-none">
+        <button onclick="login()" class="w-full bg-slate-800 text-white py-3 rounded font-bold">เข้าสู่ระบบ</button>
     </div>
 
-    <!-- ==================== VIEW 2: ADMIN DASHBOARD ==================== -->
-    <div id="view-admin" class="hidden max-w-2xl mx-auto bg-white min-h-screen shadow-md relative">
-        <!-- Header -->
-        <div class="bg-gray-800 text-white px-4 py-4 flex justify-between items-center sticky top-0 z-40">
-            <h1 class="text-lg font-bold flex items-center gap-2">
-                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                ระบบจัดการร้าน
-            </h1>
-            <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg flex items-center gap-1">
-                ออกจากระบบ
-            </button>
+    <!-- Admin Dashboard -->
+    <div id="dashboard-section" class="max-w-4xl mx-auto hidden">
+        <div class="flex justify-between items-center bg-slate-800 text-white p-4 rounded-t-lg">
+            <h1 class="text-xl font-bold">⚙️ ระบบจัดการร้าน</h1>
+            <button onclick="logout()" class="text-sm bg-slate-600 px-3 py-1 rounded">ออกระบบ</button>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="flex border-b border-gray-200 bg-white sticky top-[60px] z-40">
-            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="flex-1 py-3 text-center tab-active transition">สรุปยอด</button>
-            <button onclick="switchTab('add')" id="tab-btn-add" class="flex-1 py-3 text-center tab-inactive transition">เพิ่มสลาก</button>
-            <button onclick="switchTab('orders')" id="tab-btn-orders" class="flex-1 py-3 text-center tab-inactive transition relative">
-                รอตรวจ
-                <span id="badge-orders" class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-            </button>
-            <button onclick="switchTab('manage')" id="tab-btn-manage" class="flex-1 py-3 text-center tab-inactive transition">สลากทั้งหมด</button>
+        <div class="bg-white border-b flex overflow-x-auto text-center font-semibold text-gray-600">
+            <div onclick="switchTab('tab-add')" id="btn-add" class="flex-1 p-3 cursor-pointer text-teal-600 border-b-2 border-teal-600 whitespace-nowrap">➕ เพิ่มสลาก</div>
+            <div onclick="switchTab('tab-review')" id="btn-review" class="flex-1 p-3 cursor-pointer whitespace-nowrap">🟡 รอตรวจสลิป</div>
+            <div onclick="switchTab('tab-all')" id="btn-all" class="flex-1 p-3 cursor-pointer whitespace-nowrap">📦 สลากทั้งหมด</div>
         </div>
 
-        <!-- Content Area -->
-        <div class="p-4">
+        <div class="bg-white p-6 rounded-b-lg shadow-md min-h-[400px]">
             
-            <!-- TAB: Dashboard -->
-            <div id="tab-dashboard" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-center shadow-sm">
-                        <p class="text-xs text-gray-500 font-bold mb-1">สลากทั้งหมด</p>
-                        <h2 class="text-3xl font-bold text-gray-800" id="stat-total">0</h2>
+            <!-- Tab: Add Ticket -->
+            <div id="tab-add">
+                <h3 class="font-bold mb-4">นำเข้าสลากใบใหม่</h3>
+                <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 mb-4 hover:bg-gray-100">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <p class="text-gray-500 font-bold" id="upload-text">📸 แตะเพื่อถ่ายรูป/เลือกรูปสลาก</p>
                     </div>
-                    <div class="bg-green-50 border border-green-200 p-4 rounded-xl text-center shadow-sm">
-                        <p class="text-xs text-green-600 font-bold mb-1">พร้อมขาย (ว่าง)</p>
-                        <h2 class="text-3xl font-bold text-green-600" id="stat-available">0</h2>
-                    </div>
-                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-center shadow-sm">
-                        <p class="text-xs text-yellow-600 font-bold mb-1">รอตรวจสอบเงิน</p>
-                        <h2 class="text-3xl font-bold text-yellow-600" id="stat-review">0</h2>
-                    </div>
-                    <div class="bg-red-50 border border-red-200 p-4 rounded-xl text-center shadow-sm">
-                        <p class="text-xs text-red-600 font-bold mb-1">ขายสำเร็จ</p>
-                        <h2 class="text-3xl font-bold text-red-600" id="stat-sold">0</h2>
-                    </div>
+                    <input type="file" id="ticket-img" accept="image/*" class="hidden" onchange="previewImage(event)">
+                </label>
+                <div id="img-preview" class="hidden mb-4 text-center">
+                    <img id="preview-src" class="h-32 mx-auto rounded shadow">
+                    <p class="text-xs text-gray-500 mt-2">บีบอัดรูปภาพแล้ว</p>
                 </div>
-                
-                <div class="mt-6 bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <p class="text-sm font-bold text-blue-800">คัดลอกลิงก์หน้าร้าน</p>
-                        <p class="text-xs text-blue-600 mt-1">ส่งให้ลูกค้าผ่าน LINE หรือ Facebook</p>
+                        <label class="text-sm text-gray-600">เลขสลาก (6 หลัก) *</label>
+                        <input type="text" id="ticket-no" class="w-full p-2 border rounded mt-1 outline-none" maxlength="6">
                     </div>
-                    <button onclick="copyStoreLink()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-700">คัดลอก</button>
+                    <div>
+                        <label class="text-sm text-gray-600">ราคา (เว้นว่างได้)</label>
+                        <input type="number" id="ticket-price" class="w-full p-2 border rounded mt-1 outline-none" placeholder="เช่น 80">
+                    </div>
                 </div>
+                <button onclick="saveTicket()" id="btn-save" class="w-full bg-slate-800 text-white py-3 rounded font-bold">บันทึกสลากลงแผง</button>
             </div>
 
-            <!-- TAB: เพิ่มสลาก -->
-            <div id="tab-add" class="hidden">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">นำเข้าสลากใบใหม่</h2>
-                <form id="add-ticket-form" class="space-y-4" onsubmit="event.preventDefault(); addTicket();">
-                    
-                    <!-- อัปโหลดรูป -->
-                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center bg-gray-50 relative">
-                        <input type="file" id="ticket-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(event)">
-                        <div id="image-preview-container" class="hidden flex flex-col items-center">
-                            <img id="image-preview" class="h-32 object-contain rounded-lg shadow-sm mb-2" src="" alt="Preview">
-                            <span class="text-xs text-blue-600 font-medium">แตะเพื่อเปลี่ยนรูป</span>
-                        </div>
-                        <div id="image-placeholder" class="py-4">
-                            <svg class="mx-auto h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            <p class="text-sm text-gray-500">แตะเพื่อถ่ายรูป หรือ เลือกรูปสลาก</p>
-                        </div>
-                    </div>
-
-                    <!-- ข้อมูลสลาก -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">เลขสลาก (6 หลัก) *</label>
-                            <input type="number" id="ticket-no" required class="w-full border border-gray-300 rounded-lg px-4 py-3 text-xl tracking-widest font-bold focus:ring-green-500" placeholder="123456">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ราคา (บาท) <span class="text-xs font-normal text-gray-400">- ไม่ใส่ก็ได้</span></label>
-                            <input type="number" id="ticket-price" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg focus:ring-green-500" placeholder="เช่น 80 หรือปล่อยว่าง">
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btn-add-ticket" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md transition mt-4 flex items-center justify-center gap-2">
-                        บันทึกสลากลงแผง
-                    </button>
-                </form>
+            <!-- Tab: Review -->
+            <div id="tab-review" class="hidden">
+                <h3 class="font-bold mb-4">รายการรอตรวจสอบโอนเงิน</h3>
+                <div id="review-list" class="space-y-4"></div>
             </div>
 
-            <!-- TAB: รอตรวจ (Orders) -->
-            <div id="tab-orders" class="hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-gray-800">รายการรอตรวจสอบเงิน</h2>
-                    <button onclick="loadPendingTickets()" class="text-sm text-blue-600 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> รีเฟรช</button>
-                </div>
-                
-                <div id="pending-list" class="space-y-3">
-                    <!-- รายการรอตรวจจะถูกสร้างด้วย JS -->
-                </div>
-            </div>
-
-            <!-- TAB: จัดการสลากทั้งหมด -->
-            <div id="tab-manage" class="hidden">
-                <div class="flex gap-2 mb-4">
-                    <input type="tel" id="adminSearchInput" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-green-500" placeholder="ค้นหาเลข..." oninput="renderManageList()">
-                    <select id="adminStatusFilter" class="border border-gray-300 rounded-lg px-2 py-2 text-sm bg-white" onchange="renderManageList()">
-                        <option value="ALL">ทุกสถานะ</option>
-                        <option value="AVAILABLE">🟢 ว่าง</option>
-                        <option value="RESERVED">🟡 ติดจอง</option>
-                        <option value="PAYMENT_REVIEW">🟠 รอตรวจ</option>
-                        <option value="SOLD">🔴 ขายแล้ว</option>
-                    </select>
-                </div>
-
-                <div id="manage-list" class="space-y-2">
-                    <!-- รายการทั้งหมดจะถูกสร้างด้วย JS -->
-                </div>
+            <!-- Tab: All Tickets -->
+            <div id="tab-all" class="hidden">
+                <h3 class="font-bold mb-4">สถานะสลากทั้งหมด</h3>
+                <div id="all-list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
             </div>
 
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT & FIREBASE ==================== -->
+    <!-- Firebase Logic -->
     <script type="module">
-        // 1. นำเข้า Firebase Modules (v 11.6.1)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-        // 2. ตั้งค่า Firebase Config ของพี่ธง
         const firebaseConfig = {
             apiKey: "AIzaSyCXuj7Pl1JnBn2Y7BtyzkHHQm4MQH-isrM",
             authDomain: "time-attendance-69699.firebaseapp.com",
@@ -191,326 +93,154 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
-        // Path ข้อมูล (ใช้ path เดียวกับหน้าบ้าน)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lottery-app-v1';
-        const ticketsPath = `artifacts/${appId}/public/data/tickets`;
+        let currentBase64 = null;
 
-        // State ของระบบ
-        let allTickets = [];
-        let selectedFile = null;
-
-        // ================= ระบบตรวจสอบการล็อกอิน (Auth) =================
+        // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Login แล้ว
-                document.getElementById('view-login').classList.add('hidden');
-                document.getElementById('view-admin').classList.remove('hidden');
-                subscribeToTickets(); // เริ่มดึงข้อมูล
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+                loadDashboardData();
             } else {
-                // ยังไม่ Login
-                document.getElementById('view-login').classList.remove('hidden');
-                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
+                document.getElementById('dashboard-section').classList.add('hidden');
             }
         });
 
-        window.handleLogin = async function() {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const btn = document.getElementById('btn-login');
-            
-            btn.innerHTML = `<div class="loader"></div> กำลังตรวจสอบ...`;
-            btn.disabled = true;
+        window.login = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("รหัสผิดพลาด: " + err.message));
+        };
+        window.logout = () => signOut(auth);
 
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                // สำเร็จ onAuthStateChanged จะทำงานเอง
-                btn.innerHTML = `เข้าสู่ระบบ`;
-                btn.disabled = false;
-            } catch (error) {
-                console.error("Login Error:", error);
-                alert("อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง");
-                btn.innerHTML = `เข้าสู่ระบบ`;
-                btn.disabled = false;
-            }
+        // Tab Switcher
+        window.switchTab = (tabId) => {
+            ['tab-add', 'tab-review', 'tab-all'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['btn-add', 'btn-review', 'btn-all'].forEach(b => {
+                document.getElementById(b).classList.remove('text-teal-600', 'border-b-2', 'border-teal-600');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId.replace('tab', 'btn')).classList.add('text-teal-600', 'border-b-2', 'border-teal-600');
         };
 
-        window.handleLogout = function() {
-            if(confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
-                signOut(auth);
-            }
-        };
-
-        // ================= ดึงข้อมูลหลัก (Real-time) =================
-        function subscribeToTickets() {
-            const q = query(collection(db, ticketsPath));
-            onSnapshot(q, (snapshot) => {
-                allTickets = [];
-                let statTotal = 0, statAvail = 0, statReview = 0, statSold = 0;
-                let now = Date.now();
-
-                snapshot.forEach((doc) => {
-                    const t = { id: doc.id, ...doc.data() };
-                    allTickets.push(t);
+        // Image Compression (Base64)
+        window.previewImage = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600;
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
                     
-                    statTotal++;
-                    if(t.status === 'AVAILABLE' || (t.status === 'RESERVED' && t.reserved_until < now)) {
-                        statAvail++;
-                    } else if (t.status === 'PAYMENT_REVIEW') {
-                        statReview++;
-                    } else if (t.status === 'SOLD') {
-                        statSold++;
+                    currentBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('upload-text').classList.add('hidden');
+                    document.getElementById('img-preview').classList.remove('hidden');
+                    document.getElementById('preview-src').src = currentBase64;
+                };
+            };
+        };
+
+        window.saveTicket = async () => {
+            const no = document.getElementById('ticket-no').value;
+            const price = document.getElementById('ticket-price').value;
+            if(!no || !currentBase64) return alert("กรุณาใส่รูปและเลขให้ครบ");
+            
+            document.getElementById('btn-save').innerText = "กำลังบันทึก...";
+            await addDoc(collection(db, "lottery_tickets"), {
+                ticket_no: no,
+                price: price,
+                image_base64: currentBase64,
+                status: 'AVAILABLE',
+                created_at: Date.now()
+            });
+            
+            alert("เพิ่มสลากสำเร็จ!");
+            document.getElementById('ticket-no').value = '';
+            document.getElementById('ticket-price').value = '';
+            document.getElementById('img-preview').classList.add('hidden');
+            document.getElementById('upload-text').classList.remove('hidden');
+            currentBase64 = null;
+            document.getElementById('btn-save').innerText = "บันทึกสลากลงแผง";
+        };
+
+        function loadDashboardData() {
+            // Load Review Orders
+            onSnapshot(collection(db, "lottery_orders"), (snapshot) => {
+                const list = document.getElementById('review-list');
+                list.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const order = docSnap.data();
+                    if(order.status === 'PAYMENT_REVIEW') {
+                        let tList = order.tickets.map(t => t.no).join(', ');
+                        list.innerHTML += `
+                            <div class="border rounded p-4 flex flex-col md:flex-row gap-4">
+                                <img src="${order.slip_base64}" class="w-32 object-contain rounded cursor-pointer" onclick="window.open('${order.slip_base64}')">
+                                <div class="flex-1">
+                                    <p><b>ลูกค้า:</b> ${order.buyer_name} (${order.buyer_phone})</p>
+                                    <p><b>ยอดโอน:</b> <span class="text-teal-600 font-bold">${order.total_price} บาท</span></p>
+                                    <p class="text-sm text-gray-500">เลข: ${tList}</p>
+                                    <div class="mt-3 flex gap-2">
+                                        <button onclick="approveOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-green-600 text-white px-4 py-1 rounded">✅ รับเงินแล้ว (ขาย)</button>
+                                        <button onclick="rejectOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-red-500 text-white px-4 py-1 rounded">❌ ไม่พบยอด (ดึงกลับ)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
                 });
+            });
 
-                // อัปเดต Dashboard
-                document.getElementById('stat-total').innerText = statTotal;
-                document.getElementById('stat-available').innerText = statAvail;
-                document.getElementById('stat-review').innerText = statReview;
-                document.getElementById('stat-sold').innerText = statSold;
-
-                // อัปเดตแจ้งเตือนสีแดงใน Tab
-                const badge = document.getElementById('badge-orders');
-                if(statReview > 0) {
-                    badge.innerText = statReview;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-
-                // รีเฟรชหน้ารายการต่างๆ หากเปิดค้างไว้
-                renderPendingList();
-                renderManageList();
+            // Load All Tickets
+            onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
+                const list = document.getElementById('all-list');
+                list.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const t = docSnap.data();
+                    let badge = t.status === 'AVAILABLE' ? '🟢 ว่าง' : (t.status === 'RESERVED' ? '🟡 จอง' : (t.status === 'SOLD' ? '🔴 ขายแล้ว' : '🔵 รอตรวจ'));
+                    list.innerHTML += `
+                        <div class="border rounded p-2 text-center text-sm relative">
+                            <button onclick="deleteT('${docSnap.id}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">X</button>
+                            <img src="${t.image_base64}" class="h-16 mx-auto object-cover mb-1">
+                            <p class="font-bold">${t.ticket_no}</p>
+                            <p class="${t.status === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'} font-bold">${badge}</p>
+                        </div>
+                    `;
+                });
             });
         }
 
-        // ================= การสลับหน้าจอ (Tabs) =================
-        window.switchTab = function(tabId) {
-            // ซ่อนทุกหน้า
-            ['dashboard', 'add', 'orders', 'manage'].forEach(id => {
-                document.getElementById(`tab-${id}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${id}`).className = "flex-1 py-3 text-center tab-inactive transition";
-            });
-            // แสดงหน้าที่เลือก
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabId}`).className = "flex-1 py-3 text-center tab-active transition relative";
+        window.approveOrder = async (orderId, ticketsJson) => {
+            if(!confirm("ยืนยันว่าได้รับยอดเงินแล้วใช่หรือไม่?")) return;
+            const batch = writeBatch(db);
+            const tickets = JSON.parse(ticketsJson);
+            batch.update(doc(db, "lottery_orders", orderId), { status: 'COMPLETED' });
+            tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'SOLD' }));
+            await batch.commit();
         };
 
-        // ================= การเพิ่มสลาก (Add Ticket) =================
-        window.previewImage = function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('image-preview').src = e.target.result;
-                    document.getElementById('image-preview-container').classList.remove('hidden');
-                    document.getElementById('image-placeholder').classList.add('hidden');
-                }
-                reader.readAsDataURL(file);
-            }
+        window.rejectOrder = async (orderId, ticketsJson) => {
+            if(!confirm("ปฏิเสธสลิปนี้ และดึงสลากกลับขึ้นแผง?")) return;
+            const batch = writeBatch(db);
+            const tickets = JSON.parse(ticketsJson);
+            batch.update(doc(db, "lottery_orders", orderId), { status: 'REJECTED' });
+            tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'AVAILABLE' }));
+            await batch.commit();
         };
 
-        window.addTicket = async function() {
-            const ticketNo = document.getElementById('ticket-no').value;
-            const priceVal = document.getElementById('ticket-price').value;
-            const btn = document.getElementById('btn-add-ticket');
-
-            if (!ticketNo || ticketNo.length < 2) {
-                alert("กรุณาระบุเลขสลากให้ถูกต้อง");
-                return;
-            }
-
-            btn.innerHTML = `<div class="loader"></div> กำลังบันทึก...`;
-            btn.disabled = true;
-
-            try {
-                let imageUrl = "";
-                
-                // 1. อัปโหลดรูปขึ้น Storage (ถ้ามีการเลือกรูป)
-                if (selectedFile) {
-                    const storageRef = ref(storage, `lottery_images/${Date.now()}_${selectedFile.name}`);
-                    await uploadBytes(storageRef, selectedFile);
-                    imageUrl = await getDownloadURL(storageRef);
-                } else {
-                    // ถ้าไม่ใส่รูป ให้ใช้รูปจำลองอัตโนมัติ
-                    imageUrl = `https://placehold.co/400x200/e2e8f0/475569?text=${ticketNo}`;
-                }
-
-                // 2. บันทึกข้อมูลลง Firestore
-                await addDoc(collection(db, ticketsPath), {
-                    ticket_no: ticketNo,
-                    price: priceVal ? Number(priceVal) : null,
-                    image_url: imageUrl,
-                    status: 'AVAILABLE',
-                    reserved_until: 0,
-                    buyer_name: "",
-                    buyer_phone: "",
-                    created_at: Date.now()
-                });
-
-                // Reset Form
-                document.getElementById('ticket-no').value = '';
-                document.getElementById('ticket-price').value = '';
-                document.getElementById('ticket-image').value = '';
-                selectedFile = null;
-                document.getElementById('image-preview-container').classList.add('hidden');
-                document.getElementById('image-placeholder').classList.remove('hidden');
-                
-                alert("เพิ่มสลากลงแผงเรียบร้อย!");
-                switchTab('manage'); // เด้งไปหน้าจัดการเพื่อดูผลงาน
-
-            } catch (error) {
-                console.error("Add Ticket Error:", error);
-                alert("เกิดข้อผิดพลาด: " + error.message);
-            } finally {
-                btn.innerHTML = `บันทึกสลากลงแผง`;
-                btn.disabled = false;
-            }
+        window.deleteT = async (id) => {
+            if(confirm("ลบสลากใบนี้ออกจากแผงถาวร?")) await deleteDoc(doc(db, "lottery_tickets", id));
         };
-
-        // ================= จัดการรายการรอตรวจสอบ (Orders) =================
-        window.renderPendingList = function() {
-            const listEl = document.getElementById('pending-list');
-            const pendingTickets = allTickets.filter(t => t.status === 'PAYMENT_REVIEW');
-
-            if (pendingTickets.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">ไม่มีรายการรอตรวจสอบในขณะนี้</div>`;
-                return;
-            }
-
-            // จัดกลุ่มตามชื่อลูกค้า (เผื่อลูกค้า 1 คน ซื้อหลายใบพร้อมกัน จะได้เห็นรวดเดียว)
-            // หมายเหตุ: ใน V1 นี้ เพื่อความง่าย เราจัดการตรวจสอบเป็นรายใบได้เลย
-            listEl.innerHTML = "";
-            pendingTickets.forEach(t => {
-                listEl.innerHTML += `
-                    <div class="bg-white border border-yellow-300 rounded-xl p-4 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
-                        <div class="flex justify-between items-start mb-2 pl-2">
-                            <div>
-                                <h3 class="font-bold text-gray-800 text-lg">สลากเลข ${t.ticket_no}</h3>
-                                <p class="text-xs text-gray-500">ยอดเงิน: ${t.price ? t.price+' บ.' : 'ตามตกลง'}</p>
-                            </div>
-                            <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full">รอตรวจ</span>
-                        </div>
-                        <div class="bg-gray-50 p-2 rounded-lg text-sm mb-3 pl-2">
-                            <p><span class="text-gray-500">ลูกค้า:</span> <b>${t.buyer_name || '-'}</b></p>
-                            <p><span class="text-gray-500">โทร:</span> ${t.buyer_phone || '-'}</p>
-                        </div>
-                        <div class="flex gap-2 pl-2">
-                            <button onclick="approveTicket('${t.id}', '${t.ticket_no}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg text-sm shadow transition">✅ รับเงินแล้ว</button>
-                            <button onclick="rejectTicket('${t.id}')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 rounded-lg text-sm transition">❌ ปฏิเสธ</button>
-                        </div>
-                    </div>
-                `;
-            });
-        };
-
-        window.loadPendingTickets = function() {
-            renderPendingList(); // Manual refresh (though it's real-time)
-        };
-
-        window.approveTicket = async function(id, ticketNo) {
-            if(confirm(`ยืนยันการรับเงินสำหรับสลากเลข ${ticketNo} ใช่หรือไม่?\n(เมื่อยืนยันแล้ว สถานะจะเปลี่ยนเป็น 'ขายแล้ว')`)) {
-                try {
-                    await updateDoc(doc(db, ticketsPath, id), { status: 'SOLD' });
-                } catch (e) {
-                    alert("Error: " + e.message);
-                }
-            }
-        };
-
-        window.rejectTicket = async function(id) {
-            if(confirm(`ต้องการปฏิเสธรายการนี้ และดึงสลากกลับขึ้นแผงให้ว่าง ใช่หรือไม่?`)) {
-                try {
-                    await updateDoc(doc(db, ticketsPath, id), { 
-                        status: 'AVAILABLE',
-                        reserved_until: 0,
-                        buyer_name: "",
-                        buyer_phone: ""
-                    });
-                } catch (e) {
-                    alert("Error: " + e.message);
-                }
-            }
-        };
-
-        // ================= จัดการสลากทั้งหมด (Manage Tickets) =================
-        window.renderManageList = function() {
-            const listEl = document.getElementById('manage-list');
-            const searchText = document.getElementById('adminSearchInput').value;
-            const filterStatus = document.getElementById('adminStatusFilter').value;
-
-            let filtered = allTickets.filter(t => {
-                // ค้นหาเลข
-                if(searchText && !t.ticket_no.includes(searchText)) return false;
-                
-                // กรองสถานะ
-                let currentStatus = t.status;
-                if(t.status === 'RESERVED' && t.reserved_until < Date.now()) {
-                    currentStatus = 'AVAILABLE'; // มองเป็นว่างถ้าหมดเวลา
-                }
-                if(filterStatus !== 'ALL' && currentStatus !== filterStatus) return false;
-
-                return true;
-            });
-
-            // เรียงจากใหม่ไปเก่า
-            filtered.sort((a, b) => b.created_at - a.created_at);
-
-            if(filtered.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-5 text-gray-400 text-sm">ไม่พบข้อมูล</div>`;
-                return;
-            }
-
-            listEl.innerHTML = "";
-            filtered.forEach(t => {
-                let currentStatus = t.status;
-                if(t.status === 'RESERVED' && t.reserved_until < Date.now()) currentStatus = 'AVAILABLE';
-                
-                let badgeHTML = '';
-                if(currentStatus === 'AVAILABLE') badgeHTML = `<span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded border border-green-200">🟢 ว่าง</span>`;
-                else if(currentStatus === 'RESERVED') badgeHTML = `<span class="bg-yellow-50 text-yellow-600 text-xs px-2 py-0.5 rounded border border-yellow-200">🟡 ติดจอง</span>`;
-                else if(currentStatus === 'PAYMENT_REVIEW') badgeHTML = `<span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded border border-orange-200">🟠 รอตรวจ</span>`;
-                else if(currentStatus === 'SOLD') badgeHTML = `<span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded border border-gray-200">🔴 ขายแล้ว</span>`;
-
-                listEl.innerHTML += `
-                    <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <img src="${t.image_url}" class="w-12 h-12 object-cover rounded border border-gray-200">
-                            <div>
-                                <p class="font-bold text-gray-800 leading-tight">${t.ticket_no}</p>
-                                <p class="text-[10px] text-gray-500">${t.price ? t.price+' บ.' : 'ไม่ได้ใส่ราคา'}</p>
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-end gap-1">
-                            ${badgeHTML}
-                            <button onclick="deleteTicket('${t.id}')" class="text-[10px] text-red-500 hover:underline mt-1">ลบสลาก</button>
-                        </div>
-                    </div>
-                `;
-            });
-        };
-
-        window.deleteTicket = async function(id) {
-            if(confirm("แน่ใจหรือไม่ว่าต้องการลบสลากใบนี้ออกจากระบบอย่างถาวร?")) {
-                try {
-                    await deleteDoc(doc(db, ticketsPath, id));
-                } catch (e) {
-                    alert("ไม่สามารถลบได้: " + e.message);
-                }
-            }
-        };
-
-        window.copyStoreLink = function() {
-            // สมมติว่าลิงก์หน้าบ้านคือโดเมนปัจจุบัน (ในโปรดักชันคือ URL Cloudflare)
-            const url = window.location.href.replace('admin.html', 'index.html');
-            navigator.clipboard.writeText(url).then(() => {
-                alert("คัดลอกลิงก์ร้านเรียบร้อยแล้ว นำไปวางส่งให้ลูกค้าได้เลยค่ะ");
-            });
-        };
-
     </script>
 </body>
 </html>
