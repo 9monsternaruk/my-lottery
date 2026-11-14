@@ -29,7 +29,6 @@
             <div onclick="switchTab('tab-add')" id="btn-add" class="flex-1 p-3 cursor-pointer text-teal-600 border-b-2 border-teal-600 whitespace-nowrap">➕ เพิ่มสลาก</div>
             <div onclick="switchTab('tab-review')" id="btn-review" class="flex-1 p-3 cursor-pointer whitespace-nowrap">🟡 รอตรวจ</div>
             <div onclick="switchTab('tab-all')" id="btn-all" class="flex-1 p-3 cursor-pointer whitespace-nowrap">📦 ทั้งหมด</div>
-            <!-- เพิ่มแท็บตั้งค่า -->
             <div onclick="switchTab('tab-settings')" id="btn-settings" class="flex-1 p-3 cursor-pointer whitespace-nowrap">⚙️ ตั้งค่า</div>
         </div>
 
@@ -74,29 +73,33 @@
                 <div id="all-list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
             </div>
 
-            <!-- ================= (เพิ่มใหม่) Tab: Settings (ตั้งค่าร้าน) ================= -->
+            <!-- Tab: Settings (ตั้งค่าร้าน) -->
             <div id="tab-settings" class="hidden">
-                <h3 class="font-bold mb-4">⚙️ ตั้งค่าร้าน (QR Code รับเงิน)</h3>
+                <h3 class="font-bold mb-4">⚙️ ตั้งค่าช่องทางรับเงิน</h3>
                 
+                <div class="mb-4">
+                    <label class="text-sm text-gray-600 font-bold">เลขพร้อมเพย์ / ชื่อบัญชี</label>
+                    <input type="text" id="setting-promptpay" class="w-full p-3 border rounded mt-1 outline-none focus:border-teal-500" placeholder="เช่น พร้อมเพย์: 081-xxx-xxxx">
+                </div>
+
                 <div class="border rounded-lg p-4 bg-gray-50 text-center mb-4">
-                    <p class="text-sm text-gray-600 mb-2 font-bold">QR Code ปัจจุบันของคุณ</p>
+                    <p class="text-sm text-gray-600 mb-2 font-bold">รูป QR Code ปัจจุบัน</p>
                     <img id="current-qr-preview" class="w-40 h-40 mx-auto object-contain bg-white border rounded shadow-sm hidden">
                     <p id="no-qr-text" class="text-red-500 text-sm font-bold my-4">ยังไม่ได้ตั้งค่า QR Code</p>
                 </div>
 
-                <label class="block w-full bg-blue-100 text-blue-700 p-3 rounded cursor-pointer font-bold mb-4 border border-blue-300 text-center hover:bg-blue-200 transition">
+                <label class="block w-full bg-blue-100 text-blue-700 p-3 rounded cursor-pointer font-bold mb-2 border border-blue-300 text-center hover:bg-blue-200 transition">
                     📸 เลือกรูป QR Code ใหม่
                     <input type="file" accept="image/*" class="hidden" onchange="previewQr(event)">
                 </label>
                 
                 <div id="qr-upload-preview" class="hidden text-center mb-4">
-                    <p class="text-xs text-gray-500 mb-1">ตัวอย่างภาพที่จะบันทึก</p>
+                    <p class="text-xs text-gray-500 mb-1">ตัวอย่างภาพที่จะอัปเดต</p>
                     <img id="qr-preview-src" class="w-32 h-32 mx-auto border rounded shadow-sm object-contain bg-white">
-                    <button onclick="saveQrSettings()" id="btn-save-qr" class="w-full bg-slate-800 text-white py-3 rounded font-bold mt-4 hover:bg-slate-700 transition">อัปเดต QR Code</button>
                 </div>
-            </div>
-            <!-- ================================================================ -->
 
+                <button onclick="saveQrSettings()" id="btn-save-qr" class="w-full bg-slate-800 text-white py-3 rounded font-bold mt-4 hover:bg-slate-700 transition">บันทึกการตั้งค่าทั้งหมด</button>
+            </div>
         </div>
     </div>
 
@@ -137,7 +140,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-        // เพิ่ม setDoc เข้ามาเพื่อใช้เซฟการตั้งค่าร้าน
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -174,7 +176,6 @@
         };
         window.logout = () => signOut(auth);
 
-        // ================= สลับหน้าต่าง (อัปเดตเพิ่มแท็บตั้งค่า) =================
         window.switchTab = (tabId) => {
             ['tab-add', 'tab-review', 'tab-all', 'tab-settings'].forEach(t => document.getElementById(t).classList.add('hidden'));
             ['btn-add', 'btn-review', 'btn-all', 'btn-settings'].forEach(b => {
@@ -184,13 +185,18 @@
             document.getElementById(tabId.replace('tab', 'btn')).classList.add('text-teal-600', 'border-b-2', 'border-teal-600');
         };
 
-        // ================= ระบบ QR Code (Settings) =================
-        // ดึง QR Code เดิมมาแสดง
+        // ================= ระบบ QR Code และพร้อมเพย์ (Settings) =================
         onSnapshot(doc(db, "store_settings", "payment_info"), (docSnap) => {
-            if(docSnap.exists() && docSnap.data().qr_base64) {
-                document.getElementById('current-qr-preview').src = docSnap.data().qr_base64;
-                document.getElementById('current-qr-preview').classList.remove('hidden');
-                document.getElementById('no-qr-text').classList.add('hidden');
+            if(docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.qr_base64) {
+                    document.getElementById('current-qr-preview').src = data.qr_base64;
+                    document.getElementById('current-qr-preview').classList.remove('hidden');
+                    document.getElementById('no-qr-text').classList.add('hidden');
+                }
+                if(data.promptpay_text) {
+                    document.getElementById('setting-promptpay').value = data.promptpay_text;
+                }
             }
         });
 
@@ -204,7 +210,7 @@
                 img.src = event.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 500; // บีบให้พอดี QR Code
+                    const MAX_WIDTH = 500;
                     let width = img.width; let height = img.height;
                     if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
@@ -219,19 +225,27 @@
         };
 
         window.saveQrSettings = async () => {
-            if(!qrBase64) return;
+            const promptpayText = document.getElementById('setting-promptpay').value;
+            
             document.getElementById('btn-save-qr').innerText = "กำลังบันทึก...";
             
-            // setDoc (merge: true) สร้างไฟล์ใหม่ถ้ายังไม่มี หรือแก้ของเดิม
-            await setDoc(doc(db, "store_settings", "payment_info"), {
-                qr_base64: qrBase64,
+            // ข้อมูลที่จะอัปเดต
+            const updateData = {
+                promptpay_text: promptpayText,
                 updated_at: Date.now()
-            }, { merge: true });
+            };
             
-            alert("บันทึก QR Code รับเงินสำเร็จ!");
+            // ถ้ามีการเลือกรูปใหม่ ให้รวมเข้าไปด้วย
+            if(qrBase64) {
+                updateData.qr_base64 = qrBase64;
+            }
+            
+            await setDoc(doc(db, "store_settings", "payment_info"), updateData, { merge: true });
+            
+            alert("บันทึกการตั้งค่าสำเร็จ!");
             qrBase64 = null;
             document.getElementById('qr-upload-preview').classList.add('hidden');
-            document.getElementById('btn-save-qr').innerText = "อัปเดต QR Code";
+            document.getElementById('btn-save-qr').innerText = "บันทึกการตั้งค่าทั้งหมด";
         };
         // =======================================================
 
@@ -285,7 +299,6 @@
         };
 
         function loadDashboardData() {
-            // Load Review Orders
             onSnapshot(collection(db, "lottery_orders"), (snapshot) => {
                 const list = document.getElementById('review-list');
                 list.innerHTML = '';
@@ -311,7 +324,6 @@
                 });
             });
 
-            // Load All Tickets
             onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
                 const list = document.getElementById('all-list');
                 list.innerHTML = '';
@@ -343,7 +355,6 @@
             });
         }
 
-        // ระบบ Edit สลาก
         window.openEditModal = (id, no, price, status) => {
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-no').value = no;
