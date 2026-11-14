@@ -39,12 +39,10 @@
             <div id="tab-add">
                 <h3 class="font-bold mb-4 text-slate-800">นำเข้าสลากใบใหม่</h3>
                 
-                <!-- 🛠️ แก้ไข: แยกปุ่มกล้อง และ ปุ่มเลือกรูปให้ชัดเจน รองรับแอนดรอยด์ 100% -->
                 <div id="upload-container" class="flex gap-3 mb-4 w-full h-28">
                     <label class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-teal-400 rounded-xl cursor-pointer bg-teal-50 hover:bg-teal-100 transition shadow-sm">
                         <span class="text-3xl mb-1">📸</span>
                         <span class="text-teal-700 font-bold text-sm">เปิดกล้องถ่าย</span>
-                        <!-- ใช้ capture="environment" เพื่อบังคับเปิดกล้อง -->
                         <input type="file" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
                     </label>
                     
@@ -55,7 +53,6 @@
                     </label>
                 </div>
 
-                <!-- 🛠️ เพิ่มปุ่ม (X) สำหรับกดยกเลิกรูป เพื่อถ่ายใหม่ได้ทันที -->
                 <div id="img-preview" class="hidden mb-4 text-center bg-gray-50 border border-gray-200 rounded-xl p-4 relative shadow-inner">
                     <button onclick="resetImage()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 font-bold shadow-md hover:bg-red-600 flex items-center justify-center text-xl leading-none">&times;</button>
                     <img id="preview-src" class="h-32 mx-auto rounded shadow-sm object-cover border border-gray-300">
@@ -162,6 +159,18 @@
         </div>
     </div>
 
+    <!-- 🛠️ Custom Alert & Confirm Modal (เพิ่มใหม่ ไร้ลิงก์กวนใจ) -->
+    <div id="custom-dialog" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-[200] backdrop-blur-sm transition-opacity">
+        <div class="bg-white p-6 rounded-2xl w-10/12 max-w-sm text-center shadow-2xl transform transition-all scale-100">
+            <div id="dialog-icon" class="text-5xl mb-4">✅</div>
+            <h3 id="dialog-message" class="text-lg font-bold text-slate-800 mb-6">ข้อความ</h3>
+            <div class="flex gap-3 justify-center">
+                <button id="btn-dialog-cancel" class="hidden w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">ยกเลิก</button>
+                <button id="btn-dialog-ok" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-700 shadow-md transition">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
@@ -187,6 +196,44 @@
         let allCompletedOrders = []; 
         let allTicketsData = [];
 
+        // 🛠️ ฟังก์ชัน Custom Dialog 
+        window.customAlert = (message, icon = '✅') => {
+            return new Promise((resolve) => {
+                document.getElementById('dialog-icon').innerText = icon;
+                document.getElementById('dialog-message').innerText = message;
+                document.getElementById('btn-dialog-cancel').classList.add('hidden');
+                document.getElementById('btn-dialog-ok').classList.remove('w-1/2', 'bg-red-600', 'hover:bg-red-700');
+                document.getElementById('btn-dialog-ok').classList.add('w-full', 'bg-slate-800', 'hover:bg-slate-700');
+                
+                document.getElementById('custom-dialog').classList.remove('hidden');
+                document.getElementById('btn-dialog-ok').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(true);
+                };
+            });
+        };
+
+        window.customConfirm = (message, icon = '❓') => {
+            return new Promise((resolve) => {
+                document.getElementById('dialog-icon').innerText = icon;
+                document.getElementById('dialog-message').innerText = message;
+                document.getElementById('btn-dialog-cancel').classList.remove('hidden');
+                document.getElementById('btn-dialog-ok').classList.remove('w-full', 'bg-slate-800', 'hover:bg-slate-700');
+                document.getElementById('btn-dialog-ok').classList.add('w-1/2', 'bg-red-600', 'hover:bg-red-700');
+                
+                document.getElementById('custom-dialog').classList.remove('hidden');
+                
+                document.getElementById('btn-dialog-ok').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(true);
+                };
+                document.getElementById('btn-dialog-cancel').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(false);
+                };
+            });
+        };
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('login-section').classList.add('hidden');
@@ -198,10 +245,14 @@
             }
         });
 
-        window.login = () => {
+        window.login = async () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert("รหัสผิดพลาด: " + err.message));
+            try {
+                await signInWithEmailAndPassword(auth, e, p);
+            } catch (err) {
+                await customAlert("รหัสผ่านหรืออีเมลไม่ถูกต้อง", "❌");
+            }
         };
         window.logout = () => signOut(auth);
 
@@ -250,13 +301,13 @@
             const updateData = { promptpay_text: promptpayText, updated_at: Date.now() };
             if(qrBase64) updateData.qr_base64 = qrBase64;
             await setDoc(doc(db, "store_settings", "payment_info"), updateData, { merge: true });
-            alert("บันทึกการตั้งค่าสำเร็จ!");
+            
+            await customAlert("บันทึกการตั้งค่าสำเร็จ!", "🎉");
             qrBase64 = null;
             document.getElementById('qr-upload-preview').classList.add('hidden');
             document.getElementById('btn-save-qr').innerText = "บันทึกการตั้งค่าทั้งหมด";
         };
 
-        // 🛠️ ฟังก์ชันสำหรับล้างรูปภาพที่เลือก เพื่อให้ปุ่มถ่ายใหม่โชว์
         window.resetImage = () => {
             currentBase64 = null;
             document.getElementById('img-preview').classList.add('hidden');
@@ -280,7 +331,7 @@
                     document.getElementById('upload-container').classList.add('hidden');
                     document.getElementById('img-preview').classList.remove('hidden');
                     document.getElementById('preview-src').src = currentBase64;
-                    e.target.value = ''; // เคลียร์ input เผื่อต้องการเลือกไฟล์เดิมซ้ำ
+                    e.target.value = ''; 
                 };
             };
         };
@@ -288,13 +339,15 @@
         window.saveTicket = async () => {
             const no = document.getElementById('ticket-no').value;
             const price = document.getElementById('ticket-price').value;
-            if(!no || !currentBase64) return alert("กรุณาใส่รูปและเลขให้ครบ");
+            if(!no || !currentBase64) {
+                await customAlert("กรุณาใส่รูปและเลขให้ครบถ้วน", "⚠️");
+                return;
+            }
             document.getElementById('btn-save').innerText = "กำลังบันทึก...";
             await addDoc(collection(db, "lottery_tickets"), { ticket_no: no, price: price, image_base64: currentBase64, status: 'AVAILABLE', created_at: Date.now() });
-            alert("เพิ่มสลากสำเร็จ!");
-            document.getElementById('ticket-no').value = ''; document.getElementById('ticket-price').value = '';
             
-            // รีเซ็ตการแสดงผลกลับเป็น 2 ปุ่มเหมือนเดิม
+            await customAlert("เพิ่มสลากลงแผงสำเร็จ!", "🎉");
+            document.getElementById('ticket-no').value = ''; document.getElementById('ticket-price').value = '';
             document.getElementById('img-preview').classList.add('hidden'); 
             document.getElementById('upload-container').classList.remove('hidden');
             currentBase64 = null; 
@@ -453,17 +506,24 @@
         window.submitEdit = async () => {
             const id = document.getElementById('edit-id').value; const no = document.getElementById('edit-no').value;
             const price = document.getElementById('edit-price').value; const status = document.getElementById('edit-status').value;
-            if(!no) return alert("กรุณาใส่เลขสลาก");
+            if(!no) {
+                await customAlert("กรุณาใส่เลขสลาก", "⚠️");
+                return;
+            }
             document.getElementById('btn-submit-edit').innerText = "กำลังบันทึก...";
             try {
                 await updateDoc(doc(db, "lottery_tickets", id), { ticket_no: no, price: price ? price : null, status: status });
                 closeEditModal();
-            } catch (e) { alert("เกิดข้อผิดพลาด: " + e.message); } 
+            } catch (e) { 
+                await customAlert("เกิดข้อผิดพลาดในการบันทึก", "❌"); 
+            } 
             finally { document.getElementById('btn-submit-edit').innerText = "บันทึกการแก้ไข"; }
         };
 
         window.approveOrder = async (orderId, encodedTickets) => {
-            if(!confirm("ยืนยันรับยอดเงิน? (สลากจะถูกย้ายไปอยู่หน้าประวัติขาย)")) return;
+            const isConfirm = await customConfirm("ยืนยันรับยอดเงิน? (สลากจะถูกย้ายไปอยู่หน้าประวัติขาย)", "💰");
+            if(!isConfirm) return;
+            
             const batch = writeBatch(db);
             const tickets = JSON.parse(decodeURIComponent(encodedTickets));
             batch.update(doc(db, "lottery_orders", orderId), { status: 'COMPLETED' });
@@ -472,7 +532,9 @@
         };
 
         window.rejectOrder = async (orderId, encodedTickets) => {
-            if(!confirm("ปฏิเสธสลิปนี้ และดึงสลากกลับขึ้นแผง?")) return;
+            const isConfirm = await customConfirm("ปฏิเสธสลิปนี้ และดึงสลากกลับขึ้นแผงใช่หรือไม่?", "❌");
+            if(!isConfirm) return;
+            
             const batch = writeBatch(db);
             const tickets = JSON.parse(decodeURIComponent(encodedTickets));
             batch.update(doc(db, "lottery_orders", orderId), { status: 'REJECTED' });
@@ -481,17 +543,21 @@
         };
 
         window.undoCompletedOrder = async (orderId, encodedTickets) => {
-            if(!confirm("⚠️ แน่ใจหรือไม่? บิลนี้จะถูกยกเลิก และสลากจะถูกดึงกลับไปที่หน้าคลังสลาก (ว่าง)")) return;
+            const isConfirm = await customConfirm("⚠️ แน่ใจหรือไม่? บิลนี้จะถูกยกเลิก และสลากจะถูกดึงกลับไปที่หน้าคลังสลาก (พร้อมขาย)", "⚠️");
+            if(!isConfirm) return;
+            
             const batch = writeBatch(db);
             const tickets = JSON.parse(decodeURIComponent(encodedTickets));
             batch.update(doc(db, "lottery_orders", orderId), { status: 'CANCELLED' }); 
             tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'AVAILABLE', buyer_name: "", reserved_at: 0 }));
             await batch.commit();
-            alert("ยกเลิกการขายและดึงสลากกลับขึ้นแผงเรียบร้อย");
+            await customAlert("ยกเลิกการขายและดึงสลากกลับขึ้นแผงเรียบร้อย", "✅");
         };
 
         window.deleteT = async (id) => {
-            if(confirm("ลบสลากใบนี้ออกจากแผงถาวร?")) await deleteDoc(doc(db, "lottery_tickets", id));
+            const isConfirm = await customConfirm("ต้องการลบสลากใบนี้ออกจากแผงถาวรใช่หรือไม่?", "🗑️");
+            if(!isConfirm) return;
+            await deleteDoc(doc(db, "lottery_tickets", id));
         };
     </script>
 </body>
