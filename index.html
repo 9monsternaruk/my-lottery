@@ -2,194 +2,76 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แผงหวยออนไลน์</title>
-    <!-- โหลด Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- โหลด Font Niramit สำหรับภาษาไทยให้อ่านง่าย -->
-    <link href="https://fonts.googleapis.com/css2?family=Niramit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Niramit', sans-serif;
-            background-color: #f3f4f6; /* สีพื้นหลังสบายตา */
-            -webkit-tap-highlight-color: transparent; /* ซ่อน highlight เวลากดบนมือถือ */
-        }
-        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
-        ::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .ticket-card { transition: transform 0.1s ease-in-out; }
-        .ticket-card:active { transform: scale(0.97); }
-        
-        /* สไตล์สำหรับกล่องข้อความ Modal */
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; } </style>
 </head>
-<body class="text-gray-800 antialiased pb-24">
+<body class="pb-24">
+    <!-- Header -->
+    <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-50">
+        <h1 class="text-xl font-bold text-center">แผงหวยออนไลน์ พี่ธง</h1>
+        <div class="mt-3">
+            <input type="text" id="searchInput" placeholder="🔍 ค้นหาเลขสลาก (เช่น 123)" class="w-full p-2 rounded text-black outline-none">
+        </div>
+    </header>
 
-    <!-- ==================== VIEW 1: หน้าแผงหวย (Storefront) ==================== -->
-    <div id="view-storefront" class="block max-w-lg mx-auto bg-white min-h-screen shadow-md relative">
-        <!-- Header -->
-        <div class="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <h1 class="text-xl font-bold text-green-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                    ร้านหวยของเรา
-                </h1>
-                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">เปิดแผง</span>
-            </div>
-            <!-- Search Box -->
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <input type="tel" id="searchInput" class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm text-lg transition-all" placeholder="ค้นหาเลขท้าย 2 ตัว, 3 ตัว..." oninput="filterTickets()">
+    <!-- Ticket Grid -->
+    <div class="container mx-auto p-4">
+        <div id="ticket-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <p class="col-span-2 text-center text-gray-500 py-10">กำลังโหลดแผงหวย...</p>
+        </div>
+    </div>
+
+    <!-- Cart (Sticky Bottom) -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex justify-between items-center hidden z-40">
+        <div>
+            <p class="text-sm text-gray-600">เลือกแล้ว <span id="cart-count" class="font-bold text-teal-600">0</span> ใบ</p>
+            <p class="text-lg font-bold">รวม <span id="cart-total">0</span> บาท</p>
+        </div>
+        <button onclick="openCheckout()" class="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold text-lg shadow-md">แจ้งซื้อเลย</button>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md">
+            <h2 class="text-xl font-bold mb-4">ข้อมูลผู้ซื้อ</h2>
+            <input type="text" id="buyer-name" placeholder="ชื่อ / ชื่อเล่น" class="w-full p-3 border rounded mb-3 outline-none">
+            <input type="tel" id="buyer-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 border rounded mb-4 outline-none">
+            <div class="flex gap-2">
+                <button onclick="closeModal('checkout-modal')" class="w-1/3 bg-gray-300 py-2 rounded font-bold">ยกเลิก</button>
+                <button onclick="confirmOrder()" class="w-2/3 bg-teal-600 text-white py-2 rounded font-bold" id="btn-confirm">ยืนยันคำสั่งซื้อ</button>
             </div>
         </div>
+    </div>
 
-        <!-- แผงสลาก (Grid 2 คอลัมน์) -->
-        <div class="p-3">
-            <div class="mb-2 flex justify-between items-end">
-                <h2 class="text-sm font-semibold text-gray-600">สลากทั้งหมด <span id="total-tickets-count">(0)</span></h2>
-                <span class="text-xs text-gray-400" id="loading-text">กำลังโหลดแผง...</span>
-            </div>
+    <!-- Payment & Slip Modal -->
+    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md text-center">
+            <h2 class="text-xl font-bold text-red-600 mb-2">⏱ เหลือเวลา <span id="timer">05:00</span></h2>
+            <p class="mb-4 text-gray-600">กรุณาโอนเงินและแนบสลิปเพื่อยืนยัน</p>
             
-            <div id="ticket-grid" class="grid grid-cols-2 gap-3">
-                <!-- ข้อมูลสลากจะถูกสร้างที่นี่ด้วย JavaScript -->
+            <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                <p class="font-bold text-lg">ยอดโอน: <span id="pay-total" class="text-teal-600">0</span> บาท</p>
+                <p class="text-sm mt-1">บัญชี: ธนาคารทดสอบ (012-3-45678-9)</p>
             </div>
-        </div>
 
-        <!-- ตะกร้าสินค้า (Sticky Bottom) -->
-        <div id="floating-cart" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[92%] max-w-[460px] bg-white border-2 border-green-500 shadow-2xl rounded-2xl p-4 flex justify-between items-center z-50 transition-all duration-300 translate-y-24 opacity-0 pointer-events-none">
-            <div class="flex flex-col">
-                <span class="text-sm font-bold text-gray-700">🛒 เลือกแล้ว <span id="cart-count" class="text-green-600 text-lg">0</span> ใบ</span>
-                <span class="text-xs text-gray-500" id="cart-price-container">รวม <span id="cart-total" class="font-bold text-gray-800 text-lg">0</span> บาท</span>
-            </div>
-            <button onclick="openCheckoutModal()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 active:scale-95 transition-transform text-lg">
-                แจ้งซื้อเลย
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            </button>
+            <label class="block w-full bg-blue-100 text-blue-700 p-3 rounded cursor-pointer font-bold mb-4 border border-blue-300">
+                📸 อัปโหลดสลิปโอนเงิน
+                <input type="file" id="slip-file" accept="image/*" class="hidden" onchange="handleSlipSelect(event)">
+            </label>
+            <p id="slip-name" class="text-sm text-green-600 mb-4 hidden">อัปโหลดสลิปแล้ว!</p>
+
+            <button onclick="submitPayment()" id="btn-submit-slip" class="w-full bg-teal-600 text-white py-3 rounded-lg font-bold text-lg shadow-md opacity-50 pointer-events-none">แจ้งโอนเงิน</button>
         </div>
     </div>
 
-    <!-- ==================== MODAL: ข้อมูลผู้ซื้อ (Checkout Modal) ==================== -->
-    <div id="checkout-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white w-[90%] max-w-md rounded-2xl shadow-2xl p-6 transform scale-95 transition-transform duration-200" id="checkout-modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">ข้อมูลผู้แจ้งซื้อ</h3>
-                <button onclick="closeModal('checkout-modal')" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <p class="text-sm text-gray-500 mb-4">กรุณากรอกข้อมูลเล็กน้อยเพื่อแจ้งโอนเงินให้แม่ค้าทราบค่ะ (ไม่ต้องสมัครสมาชิก)</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อเล่น หรือ ชื่อจริง</label>
-                    <input type="text" id="buyer-name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-lg" placeholder="เช่น พี่ธง">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์ (ไว้ติดต่อกรณีฉุกเฉิน)</label>
-                    <input type="tel" id="buyer-phone" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-lg" placeholder="08X-XXX-XXXX">
-                </div>
-            </div>
-            
-            <div class="mt-6 flex gap-3">
-                <button onclick="closeModal('checkout-modal')" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50">ยกเลิก</button>
-                <button onclick="confirmOrder()" id="btn-confirm-order" class="flex-1 py-3 px-4 bg-green-500 text-white rounded-xl font-bold text-lg hover:bg-green-600 shadow-md">ยืนยันการซื้อ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== VIEW 2: หน้าชำระเงิน (Payment) ==================== -->
-    <div id="view-payment" class="hidden max-w-lg mx-auto bg-gray-50 min-h-screen relative">
-        <div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3 shadow-sm sticky top-0 z-40">
-            <h1 class="text-lg font-bold text-gray-800">รอการชำระเงิน</h1>
-        </div>
-        
-        <div class="p-4">
-            <!-- Alert & Timer -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-start gap-3">
-                <svg class="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <div>
-                    <h3 class="text-sm font-bold text-yellow-800">กรุณาโอนเงินภายในเวลาที่กำหนด</h3>
-                    <p class="text-xs text-yellow-600 mb-1">หากเกินเวลา ระบบจะปล่อยสลากให้คนอื่นอัตโนมัติค่ะ</p>
-                    <div class="text-2xl font-bold text-red-600 tracking-wider" id="countdown-timer">05:00</div>
-                </div>
-            </div>
-
-            <!-- Payment Details -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-                <p class="text-sm text-gray-500 mb-1">ยอดที่ต้องชำระ</p>
-                <h2 class="text-4xl font-bold text-green-600 mb-4" id="payment-total-amount">0<span class="text-xl">.00</span> ฿</h2>
-                
-                <div class="w-48 h-48 mx-auto bg-gray-100 rounded-xl flex items-center justify-center mb-4 border-2 border-dashed border-gray-300">
-                    <!-- Mock QR Code -->
-                    <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                    <span class="absolute text-gray-500 text-sm font-medium mt-16">QR รับเงินของแอดมิน</span>
-                </div>
-                
-                <div class="bg-gray-50 p-3 rounded-lg text-left">
-                    <p class="text-xs text-gray-500">ชื่อบัญชี</p>
-                    <p class="text-sm font-bold text-gray-800">นาย แผงหวย ออนไลน์</p>
-                    <p class="text-xs text-gray-500 mt-2">ธนาคาร</p>
-                    <p class="text-sm font-bold text-gray-800">กสิกรไทย (KBANK) - 123-4-56789-0</p>
-                </div>
-            </div>
-
-            <!-- Upload Slip Area (Mock for V1) -->
-            <div class="mt-6">
-                <button onclick="notifyPayment()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    แจ้งโอนเงิน (แนบสลิป)
-                </button>
-                <p class="text-center text-xs text-gray-400 mt-3">*ในเวอร์ชันแรกจะจำลองการแนบสลิป เพื่อความรวดเร็วในการทดสอบ</p>
-            </div>
-            
-            <!-- List of tickets in this order -->
-            <div class="mt-8 border-t border-gray-200 pt-4 pb-8">
-                <p class="text-sm font-medium text-gray-500 mb-3">รายการสลากที่จองไว้</p>
-                <div id="payment-ticket-list" class="space-y-2">
-                    <!-- รายการหวยที่จอง -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== VIEW 3: หน้าสำเร็จ (Success) ==================== -->
-    <div id="view-success" class="hidden max-w-lg mx-auto bg-white min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">แจ้งชำระเงินสำเร็จ!</h2>
-        <p class="text-gray-500 mb-8">แอดมินได้รับข้อมูลของท่านแล้ว<br>กำลังตรวจสอบยอดเงินและจะยืนยันสลากให้ท่านเร็วๆ นี้ค่ะ</p>
-        
-        <button onclick="resetApp()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl text-lg">
-            กลับไปหน้าแรก
-        </button>
-    </div>
-
-    <!-- ==================== Global Alert Modal ==================== -->
-    <div id="alert-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white w-[85%] max-w-sm rounded-2xl shadow-2xl p-6 text-center transform scale-95 transition-transform duration-200" id="alert-modal-content">
-            <h3 class="text-lg font-bold text-gray-800 mb-2" id="alert-title">แจ้งเตือน</h3>
-            <p class="text-sm text-gray-600 mb-5" id="alert-message">ข้อความ</p>
-            <button onclick="closeModal('alert-modal')" class="w-full py-3 bg-gray-800 text-white rounded-xl font-bold">ตกลง</button>
-        </div>
-    </div>
-
-
-    <!-- ==================== JAVASCRIPT & FIREBASE ==================== -->
+    <!-- Firebase Logic -->
     <script type="module">
-        // 1. นำเข้า Firebase Modules (บังคับใช้เวอร์ชัน 11.6.1 ตามกฎ)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, onSnapshot, doc, getDocs, addDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, writeBatch, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-        // 2. ตั้งค่า Firebase Config ที่พี่ธงให้มา
         const firebaseConfig = {
             apiKey: "AIzaSyCXuj7Pl1JnBn2Y7BtyzkHHQm4MQH-isrM",
             authDomain: "time-attendance-69699.firebaseapp.com",
@@ -199,436 +81,198 @@
             appId: "1:793986547170:web:337bfe602d9b3e32f34dbb"
         };
 
-        // เริ่มต้น Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // กำหนด Path ฐานข้อมูล (ตามกฎ Mandatory ของ AI Platform)
-        // เพื่อป้องกันปัญหา Permission ให้ใช้ Path: /artifacts/{appId}/public/data/tickets
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lottery-app-v1';
-        const ticketsPath = `artifacts/${appId}/public/data/tickets`;
-        const ordersPath = `artifacts/${appId}/public/data/orders`;
-
-        // ตัวแปร State เก็บข้อมูลในหน้าจอ
         let allTickets = [];
-        let cart = []; // เก็บ ticket_id ที่เลือกไว้
-        let currentUserId = null;
-        let paymentTimer = null;
+        let cart = [];
+        let compressedSlip = null;
+        let countdownTimer;
 
-        // ================= ฟังก์ชันหลัก (Main) =================
-
-        // เมื่อโหลดหน้าเว็บเสร็จ
-        window.onload = async () => {
-            try {
-                // 1. Authenticate ก่อนดึงข้อมูล (Mandatory Rule)
-                const userCred = await signInAnonymously(auth);
-                currentUserId = userCred.user.uid;
-                
-                // 2. จำลองข้อมูล (Seed Data) หากเพิ่งรันครั้งแรกและตารางว่าง
-                await seedMockDataIfEmpty();
-
-                // 3. ดึงข้อมูลแบบ Real-time (onSnapshot) เพื่อให้แผงหวยอัปเดตเสมอ
-                subscribeToTickets();
-
-            } catch (error) {
-                console.error("Firebase Init Error:", error);
-                showAlert("เกิดข้อผิดพลาด", "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
-                document.getElementById('loading-text').innerText = "เชื่อมต่อล้มเหลว";
-            }
+        // Image Compression Function (Base64)
+        window.compressImage = function(file, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                };
+            };
         };
 
-        // ฟังก์ชันดึงข้อมูลสลากแบบ Real-time
-        function subscribeToTickets() {
-            const q = query(collection(db, ticketsPath));
-            
-            // onSnapshot ต้องมี Callback 2 ตัว (Success, Error) ตามกฎ
-            onSnapshot(q, (snapshot) => {
-                allTickets = [];
-                snapshot.forEach((doc) => {
-                    allTickets.push({ id: doc.id, ...doc.data() });
-                });
-                
-                document.getElementById('loading-text').innerText = "อัปเดตล่าสุด: " + new Date().toLocaleTimeString('th-TH');
-                document.getElementById('total-tickets-count').innerText = `(${allTickets.length})`;
-                
-                renderTickets(); // วาดแผงหวยใหม่
-                updateCartUI(); // เผื่อใบที่อยู่ในตะกร้าถูกคนอื่นซื้อไปแล้ว จะได้รีเซ็ต
-            }, (error) => {
-                console.error("Firestore Error:", error);
-                document.getElementById('loading-text').innerText = "ขาดการเชื่อมต่อ";
+        // Fetch Tickets Real-time
+        onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
+            allTickets = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                // Check if RESERVED but expired (5 mins = 300000 ms)
+                if(data.status === 'RESERVED' && (Date.now() - data.reserved_at > 300000)) {
+                    data.status = 'AVAILABLE'; 
+                }
+                allTickets.push({ id: doc.id, ...data });
             });
-        }
+            renderTickets();
+        });
 
-        // ================= การแสดงผลแผงหวย (UI Render) =================
-
-        // วาดสลากลงใน Grid
-        window.renderTickets = function(filterText = "") {
+        function renderTickets() {
             const grid = document.getElementById('ticket-grid');
-            grid.innerHTML = ""; // ล้างของเก่า
-
-            // กรองเฉพาะสลากที่พร้อมขาย และตรงกับคำค้นหา
-            const now = Date.now();
-            let availableTickets = allTickets.filter(t => {
-                // ถ้าสถานะเป็น AVAILABLE ถือว่าว่าง
-                // หรือถ้าเป็น RESERVED แต่เวลาหมดแล้ว ก็ถือว่าว่าง (Auto Release)
-                const isAvailable = t.status === 'AVAILABLE' || (t.status === 'RESERVED' && t.reserved_until < now);
-                return isAvailable;
-            });
-
-            // ค้นหาตัวเลข
-            if (filterText) {
-                availableTickets = availableTickets.filter(t => t.ticket_no.includes(filterText));
-            }
-
-            if (availableTickets.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400">ไม่พบสลากที่ท่านค้นหา หรือสลากถูกขายหมดแล้วค่ะ</div>`;
+            const keyword = document.getElementById('searchInput').value;
+            grid.innerHTML = '';
+            
+            const availableTickets = allTickets.filter(t => t.status === 'AVAILABLE' && t.ticket_no.includes(keyword));
+            
+            if(availableTickets.length === 0) {
+                grid.innerHTML = '<p class="col-span-2 text-center text-gray-500 py-5">ไม่มีสลากว่างที่ค้นหา</p>';
                 return;
             }
 
-            // วนลูปสร้าง HTML ของแต่ละใบ
             availableTickets.forEach(ticket => {
-                const isSelected = cart.includes(ticket.id);
-                
-                // การจัดการราคา (ถ้าไม่มีราคา หรือราคาเป็น 0 ให้ซ่อน)
-                const hasPrice = ticket.price != null && ticket.price > 0;
-                const priceHTML = hasPrice 
-                    ? `<div class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-bl-lg absolute top-0 right-0">${ticket.price}.-</div>`
-                    : ``; // ซ่อนป้ายราคาอย่างแนบเนียน
-
-                // ปุ่มเลือก
-                const btnHTML = isSelected
-                    ? `<button onclick="toggleCart('${ticket.id}')" class="w-full mt-2 py-2 bg-gray-200 text-gray-700 text-sm font-bold rounded-lg border-2 border-transparent">✓ เลือกแล้ว</button>`
-                    : `<button onclick="toggleCart('${ticket.id}')" class="w-full mt-2 py-2 bg-white text-green-600 border-2 border-green-500 text-sm font-bold rounded-lg hover:bg-green-50 active:bg-green-100 transition-colors">เลือกใบนี้</button>`;
-
-                const cardHTML = `
-                    <div class="ticket-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative ${isSelected ? 'ring-2 ring-green-500' : ''}">
-                        ${priceHTML}
-                        <!-- รูปภาพสลาก (ใช้รูป Placeholder สมมติ) -->
-                        <div class="aspect-[2/1] bg-gray-200 w-full overflow-hidden">
-                            <img src="${ticket.image_url || 'https://placehold.co/400x200/e2e8f0/475569?text='+ticket.ticket_no}" alt="สลากเลข ${ticket.ticket_no}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200/f87171/ffffff?text=Image+Error'">
-                        </div>
+                const isSelected = cart.find(item => item.id === ticket.id);
+                const priceTag = ticket.price ? `<p class="font-bold text-teal-600 mt-1">${ticket.price} บาท</p>` : '';
+                grid.innerHTML += `
+                    <div class="bg-white rounded-lg shadow-sm border ${isSelected ? 'border-4 border-teal-500' : 'border-gray-200'} overflow-hidden relative cursor-pointer" onclick="toggleCart('${ticket.id}')">
+                        ${isSelected ? '<div class="absolute top-0 right-0 bg-teal-500 text-white text-xs px-2 py-1 rounded-bl-lg font-bold">เลือกแล้ว</div>' : ''}
+                        <img src="${ticket.image_base64}" class="w-full h-24 object-cover" alt="หวย">
                         <div class="p-2 text-center">
-                            <h3 class="text-xl font-bold tracking-widest text-gray-800">${ticket.ticket_no}</h3>
-                            ${btnHTML}
+                            <p class="font-bold tracking-widest text-lg">${ticket.ticket_no}</p>
+                            ${priceTag}
                         </div>
                     </div>
                 `;
-                grid.innerHTML += cardHTML;
             });
-        };
+        }
 
-        // ค้นหาสลากพิมพ์แบบ Realtime
-        window.filterTickets = function() {
-            const text = document.getElementById('searchInput').value;
-            renderTickets(text);
-        };
+        document.getElementById('searchInput').addEventListener('input', renderTickets);
 
-        // ================= ระบบตะกร้า (Cart) =================
-
-        // เพิ่ม/ลด ในตะกร้า
-        window.toggleCart = function(ticketId) {
-            const index = cart.indexOf(ticketId);
-            if (index > -1) {
-                cart.splice(index, 1); // เอาออก
-            } else {
-                // เช็คว่าใบนี้ยังว่างอยู่จริงไหมก่อนเพิ่มลงตะกร้า
-                const t = allTickets.find(x => x.id === ticketId);
-                if(t && (t.status === 'AVAILABLE' || (t.status === 'RESERVED' && t.reserved_until < Date.now()))) {
-                    cart.push(ticketId); // เพิ่ม
-                } else {
-                    showAlert("ขออภัย", "ใบนี้เพิ่งมีผู้ซื้อไปเมื่อสักครู่ กรุณาเลือกใบอื่นค่ะ");
-                }
-            }
-            renderTickets(document.getElementById('searchInput').value); // รีเฟรชกริด
+        window.toggleCart = function(id) {
+            const ticket = allTickets.find(t => t.id === id);
+            const index = cart.findIndex(t => t.id === id);
+            if (index > -1) cart.splice(index, 1);
+            else cart.push(ticket);
+            
             updateCartUI();
+            renderTickets();
         };
 
-        // อัปเดตแถบตะกร้าลอยตัวด้านล่าง
         function updateCartUI() {
-            const cartEl = document.getElementById('floating-cart');
-            
-            // ตรวจสอบว่าใบในตะกร้ายังมีสถานะว่างอยู่ไหม (เผื่อมีคนซื้อตัดหน้าตอนเรายังไม่กดแจ้งซื้อ)
-            const now = Date.now();
-            cart = cart.filter(id => {
-                const t = allTickets.find(x => x.id === id);
-                return t && (t.status === 'AVAILABLE' || (t.status === 'RESERVED' && t.reserved_until < now));
-            });
-
+            const cartBar = document.getElementById('cart-bar');
             if (cart.length > 0) {
-                cartEl.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-                
+                cartBar.classList.remove('hidden');
                 document.getElementById('cart-count').innerText = cart.length;
-                
-                // คำนวณราคา (นับเฉพาะใบที่มีราคา)
-                let total = 0;
-                let hasPriceless = false;
-                cart.forEach(id => {
-                    const t = allTickets.find(x => x.id === id);
-                    if (t.price && t.price > 0) total += Number(t.price);
-                    else hasPriceless = true;
-                });
-
-                const priceContainer = document.getElementById('cart-price-container');
-                if(total > 0) {
-                    priceContainer.style.display = 'block';
-                    document.getElementById('cart-total').innerText = total;
-                    if(hasPriceless) priceContainer.innerHTML = `รวม <span class="font-bold text-gray-800 text-lg">${total}</span> บ. + ตามตกลง`;
-                    else priceContainer.innerHTML = `รวม <span id="cart-total" class="font-bold text-gray-800 text-lg">${total}</span> บาท`;
-                } else {
-                    priceContainer.style.display = 'none'; // ซ่อนยอดรวมถ้าราคาเป็นตามตกลงทั้งหมด
-                }
-
+                const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+                document.getElementById('cart-total').innerText = total;
             } else {
-                // ซ่อนตะกร้า
-                cartEl.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+                cartBar.classList.add('hidden');
             }
         }
 
+        window.openCheckout = () => document.getElementById('checkout-modal').classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById('checkout-modal').classList.add('hidden');
 
-        // ================= ระบบจอง / ทำรายการ (Checkout & Lock 5 Mins) =================
-
-        // เปิดหน้าต่างกรอกชื่อ (Click 2)
-        window.openCheckoutModal = function() {
-            if(cart.length === 0) return;
-            const modal = document.getElementById('checkout-modal');
-            const content = document.getElementById('checkout-modal-content');
-            
-            modal.classList.remove('hidden');
-            // Animate In
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
-        };
-
-        // ปิด Modal ทั่วไป
-        window.closeModal = function(modalId) {
-            const modal = document.getElementById(modalId);
-            const content = modal.querySelector('div');
-            
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 200);
-        };
-
-        // เปิด Alert แบบ Custom (ไม่ใช้ window.alert)
-        window.showAlert = function(title, message) {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-message').innerText = message;
-            const modal = document.getElementById('alert-modal');
-            const content = document.getElementById('alert-modal-content');
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
-        };
-
-        // ยืนยันการสั่งซื้อ (Click 3: Lock สลาก 5 นาที แล้วไปหน้าโอนเงิน)
+        // Book Tickets (Transaction Simulation via Batch)
         window.confirmOrder = async function() {
-            const name = document.getElementById('buyer-name').value.trim();
-            const phone = document.getElementById('buyer-phone').value.trim();
+            const name = document.getElementById('buyer-name').value;
+            const phone = document.getElementById('buyer-phone').value;
+            if(!name || !phone) return alert("กรุณากรอกชื่อและเบอร์โทรให้ครบถ้วน");
 
-            if(!name || !phone) {
-                showAlert("ข้อมูลไม่ครบ", "รบกวนระบุชื่อและเบอร์โทรติดต่อให้แม่ค้านิดนึงนะคะ");
-                return;
-            }
-
-            const btn = document.getElementById('btn-confirm-order');
-            btn.innerText = "กำลังจอง...";
-            btn.disabled = true;
-
+            document.getElementById('btn-confirm').innerText = "กำลังล็อคสลาก...";
             try {
-                // ใช้ Batch Write เพื่ออัปเดตสลากหลายใบพร้อมกันอย่างปลอดภัย
                 const batch = writeBatch(db);
-                const reservedUntil = Date.now() + (5 * 60 * 1000); // +5 นาที
-                let successCount = 0;
-                let totalPrice = 0;
-                let hasPriceless = false;
-                
-                // ตรวจสอบข้อมูลก่อนจองจริง
-                for (const ticketId of cart) {
-                    const ticketRef = doc(db, ticketsPath, ticketId);
-                    // หมายเหตุ: ในระบบ Production จริง ควรใช้ Firestore Transaction เพื่อล็อคแบบ 100% 
-                    // แต่ใน V1 แบบ Single File นี้ ใช้การเขียนทับสถานะ + เวลา เพื่อความรวดเร็วและเข้าใจง่าย
-                    
-                    const t = allTickets.find(x => x.id === ticketId);
-                    if(t) {
-                        batch.update(ticketRef, {
-                            status: 'RESERVED',
-                            reserved_until: reservedUntil,
-                            buyer_name: name,
-                            buyer_phone: phone
-                        });
-                        successCount++;
-                        if(t.price && t.price > 0) totalPrice += Number(t.price);
-                        else hasPriceless = true;
+                // Pre-check
+                for (let item of cart) {
+                    const docSnap = await getDoc(doc(db, "lottery_tickets", item.id));
+                    const dbData = docSnap.data();
+                    if(dbData.status !== 'AVAILABLE' && !(dbData.status === 'RESERVED' && (Date.now() - dbData.reserved_at > 300000))) {
+                        throw new Error(`ใบเลข ${item.ticket_no} ถูกซื้อไปแล้ว กรุณาเลือกใหม่`);
                     }
-                }
-
-                // ส่งคำสั่งอัปเดตขึ้น Firebase
-                if(successCount > 0) {
-                    await batch.commit();
-                    
-                    // ปิด Modal
-                    closeModal('checkout-modal');
-                    btn.innerText = "ยืนยันการซื้อ";
-                    btn.disabled = false;
-
-                    // สลับไปหน้าชำระเงิน
-                    setupPaymentScreen(totalPrice, hasPriceless, reservedUntil);
-                    switchView('view-payment');
-                } else {
-                    showAlert("ผิดพลาด", "ไม่สามารถจองสลากได้ อาจมีผู้อื่นซื้อไปแล้ว");
-                    btn.innerText = "ยืนยันการซื้อ";
-                    btn.disabled = false;
-                }
-
-            } catch (error) {
-                console.error("Lock Error:", error);
-                showAlert("เกิดข้อผิดพลาด", "โปรดลองใหม่อีกครั้ง");
-                btn.innerText = "ยืนยันการซื้อ";
-                btn.disabled = false;
-            }
-        };
-
-        // ================= หน้าชำระเงิน (Payment Screen & Timer) =================
-
-        function setupPaymentScreen(total, hasPriceless, endTime) {
-            // เซ็ตยอดเงิน
-            const amtEl = document.getElementById('payment-total-amount');
-            if(total > 0 && !hasPriceless) {
-                amtEl.innerHTML = `${total}<span class="text-xl">.00</span> ฿`;
-            } else if (total > 0 && hasPriceless) {
-                amtEl.innerHTML = `<span class="text-2xl">${total} ฿ + ตามตกลง</span>`;
-            } else {
-                amtEl.innerHTML = `<span class="text-2xl">ตามที่ตกลงกัน</span>`;
-            }
-
-            // แสดงรายการสลากที่จอง
-            const listEl = document.getElementById('payment-ticket-list');
-            listEl.innerHTML = "";
-            cart.forEach(id => {
-                const t = allTickets.find(x => x.id === id);
-                if(t) {
-                    listEl.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
-                            <span class="font-bold tracking-widest text-lg text-gray-800">${t.ticket_no}</span>
-                            <span class="text-sm text-gray-500">${t.price && t.price > 0 ? t.price+' บ.' : 'ตามตกลง'}</span>
-                        </div>
-                    `;
-                }
-            });
-
-            // เริ่มนับเวลาถอยหลัง
-            if(paymentTimer) clearInterval(paymentTimer);
-            
-            const timerEl = document.getElementById('countdown-timer');
-            paymentTimer = setInterval(() => {
-                const remain = endTime - Date.now();
-                if(remain <= 0) {
-                    // หมดเวลา
-                    clearInterval(paymentTimer);
-                    timerEl.innerText = "00:00";
-                    showAlert("หมดเวลาโอนเงิน", "สลากใบนี้ถูกปล่อยกลับขึ้นแผงแล้วค่ะ กรุณาทำรายการใหม่อีกครั้ง");
-                    resetApp(); // กลับไปหน้าแรก
-                } else {
-                    const mins = Math.floor((remain % (1000 * 60 * 60)) / (1000 * 60));
-                    const secs = Math.floor((remain % (1000 * 60)) / 1000);
-                    timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-
-        // กดปุ่มแจ้งโอนเงิน (จำลองการอัปโหลดสลิปสำหรับ V1)
-        window.notifyPayment = async function() {
-            if(cart.length === 0) return;
-            
-            try {
-                // 1. เปลี่ยนสถานะสลากเป็น "รอตรวจสอบ" (PAYMENT_REVIEW)
-                const batch = writeBatch(db);
-                for (const ticketId of cart) {
-                    const ticketRef = doc(db, ticketsPath, ticketId);
-                    batch.update(ticketRef, {
-                        status: 'PAYMENT_REVIEW', // Admin จะเห็นเป็นสีเหลือง
-                        reserved_until: 0 // ยกเลิกเวลาจอง
+                    batch.update(doc(db, "lottery_tickets", item.id), { 
+                        status: 'RESERVED', 
+                        reserved_at: Date.now(),
+                        buyer_name: name
                     });
                 }
+                await batch.commit(); // ล็อคสำเร็จ 5 นาที
+
+                document.getElementById('checkout-modal').classList.add('hidden');
+                document.getElementById('payment-modal').classList.remove('hidden');
                 
-                // 2. สร้าง Order เก็บไว้ (เพื่อประวัติ)
-                const name = document.getElementById('buyer-name').value;
-                const phone = document.getElementById('buyer-phone').value;
-                await addDoc(collection(db, ordersPath), {
-                    ticket_ids: [...cart],
-                    buyer_name: name,
-                    buyer_phone: phone,
+                const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+                document.getElementById('pay-total').innerText = total;
+                startTimer(300); // 5 mins
+
+            } catch (e) {
+                alert(e.message);
+                document.getElementById('btn-confirm').innerText = "ยืนยันคำสั่งซื้อ";
+            }
+        };
+
+        window.handleSlipSelect = function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            compressImage(file, (base64) => {
+                compressedSlip = base64;
+                document.getElementById('slip-name').classList.remove('hidden');
+                document.getElementById('btn-submit-slip').classList.remove('opacity-50', 'pointer-events-none');
+            });
+        };
+
+        window.submitPayment = async function() {
+            if(!compressedSlip) return;
+            document.getElementById('btn-submit-slip').innerText = "กำลังส่งข้อมูล...";
+            
+            const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+            
+            try {
+                // สร้างออเดอร์แจ้งโอน
+                await addDoc(collection(db, "lottery_orders"), {
+                    buyer_name: document.getElementById('buyer-name').value,
+                    buyer_phone: document.getElementById('buyer-phone').value,
+                    total_price: total,
+                    slip_base64: compressedSlip,
+                    tickets: cart.map(t => ({ id: t.id, no: t.ticket_no })),
                     status: 'PAYMENT_REVIEW',
-                    created_at: Date.now(),
-                    // slip_image_url: "" (V2 จะเพิ่มส่วนนี้ให้แนบรูปภาพจริงผ่าน Firebase Storage)
+                    created_at: serverTimestamp()
                 });
 
+                // เปลี่ยนสถานะสลากเป็น รอตรวจสอบ
+                const batch = writeBatch(db);
+                cart.forEach(item => {
+                    batch.update(doc(db, "lottery_tickets", item.id), { status: 'PAYMENT_REVIEW' });
+                });
                 await batch.commit();
 
-                // หยุดเวลาและไปหน้า Success
-                if(paymentTimer) clearInterval(paymentTimer);
-                switchView('view-success');
-
-            } catch (error) {
-                console.error("Notify Payment Error:", error);
-                showAlert("เกิดข้อผิดพลาด", "ไม่สามารถแจ้งโอนได้ โปรดติดต่อแม่ค้าโดยตรง");
+                alert("แจ้งโอนเงินสำเร็จ! กรุณารอแอดมินตรวจสอบ");
+                location.reload(); // รีเฟรชหน้าจบการขาย
+            } catch(e) {
+                console.error(e);
+                alert("เกิดข้อผิดพลาดในการแจ้งโอน");
             }
         };
 
-
-        // ================= Utilities =================
-
-        // สลับหน้าจอ (SPA)
-        function switchView(viewId) {
-            document.getElementById('view-storefront').classList.add('hidden');
-            document.getElementById('view-payment').classList.add('hidden');
-            document.getElementById('view-success').classList.add('hidden');
-            
-            document.getElementById(viewId).classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        // รีเซ็ตแอปกลับหน้าแรก (ตอนหมดเวลา หรือสั่งซื้อเสร็จ)
-        window.resetApp = function() {
-            cart = [];
-            document.getElementById('buyer-name').value = '';
-            document.getElementById('buyer-phone').value = '';
-            updateCartUI();
-            renderTickets(document.getElementById('searchInput').value);
-            switchView('view-storefront');
-        };
-
-        // [เฉพาะการทดสอบ] ยัดข้อมูลจำลองลง DB ถ้ายังไม่มีข้อมูลเลย
-        async function seedMockDataIfEmpty() {
-            const q = query(collection(db, ticketsPath));
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                console.log("Seeding Mock Data...");
-                const mocks = [
-                    { ticket_no: "123456", price: 80, status: "AVAILABLE", image_url: "https://placehold.co/400x200/e2e8f0/475569?text=123456" },
-                    { ticket_no: "654321", price: 80, status: "AVAILABLE", image_url: "https://placehold.co/400x200/e2e8f0/475569?text=654321" },
-                    { ticket_no: "111111", price: null, status: "AVAILABLE", image_url: "https://placehold.co/400x200/e2e8f0/475569?text=111111" }, // ไม่มีราคา (ซ่อนป้าย)
-                    { ticket_no: "999999", price: 100, status: "AVAILABLE", image_url: "https://placehold.co/400x200/e2e8f0/475569?text=999999" }
-                ];
-                for (const t of mocks) {
-                    await addDoc(collection(db, ticketsPath), { 
-                        ...t, 
-                        reserved_until: 0, 
-                        buyer_name: "", 
-                        buyer_phone: "",
-                        created_at: Date.now() 
-                    });
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            countdownTimer = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+                document.getElementById('timer').textContent = minutes + ":" + seconds;
+                if (--timer < 0) {
+                    clearInterval(countdownTimer);
+                    alert("หมดเวลาทำรายการ สลากถูกนำกลับขึ้นแผง");
+                    location.reload();
                 }
-                console.log("Mock Data created.");
-            }
+            }, 1000);
         }
     </script>
 </body>
