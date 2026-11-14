@@ -11,7 +11,7 @@
 <body class="pb-24">
     <!-- Header -->
     <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-40">
-        <h1 class="text-xl font-bold text-center">แผงหวยเงินล้าน</h1>
+        <h1 class="text-xl font-bold text-center">รวย รวย </h1>
         <div class="mt-3">
             <input type="text" id="searchInput" placeholder="🔍 ค้นหาเลขสลาก (เช่น 123)" class="w-full p-2 rounded text-black outline-none">
         </div>
@@ -56,7 +56,6 @@
     <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white p-6 rounded-xl w-11/12 max-w-md text-center relative">
             
-            <!-- ปุ่ม X (ปิด/ยกเลิกการซื้อ) -->
             <button onclick="cancelPayment()" class="absolute top-2 right-4 text-gray-400 hover:text-red-500 text-3xl font-bold leading-none">&times;</button>
             
             <h2 class="text-xl font-bold text-red-600 mb-2 mt-2">⏱ เหลือเวลา <span id="timer">05:00</span></h2>
@@ -65,10 +64,13 @@
             <div class="bg-gray-50 p-4 rounded-lg mb-4 border">
                 <p class="font-bold text-lg">ยอดโอน: <span id="pay-total" class="text-teal-600">0</span> บาท</p>
                 
-                <!-- โซนแสดง QR Code (ถ้าแอดมินอัปโหลดไว้) -->
+                <!-- โซนแสดง พร้อมเพย์ และ QR Code -->
                 <div id="qr-container" class="mt-4 hidden border-t pt-4">
-                    <p class="text-xs text-gray-500 mb-2 font-bold">สแกน QR Code เพื่อโอนเงิน (คลิกเพื่อขยาย)</p>
-                    <img id="qr-image" src="" class="w-32 h-32 mx-auto rounded-lg shadow-sm border border-gray-300 cursor-pointer object-cover" onclick="openImageModal(event, this.src)">
+                    <!-- ข้อความพร้อมเพย์ (แสดงผลเมื่อแอดมินตั้งค่า) -->
+                    <p id="promptpay-display" class="font-bold text-blue-700 mb-3 text-lg hidden"></p>
+                    
+                    <p id="qr-hint" class="text-xs text-gray-500 mb-2 font-bold hidden">สแกน QR Code เพื่อโอนเงิน (คลิกเพื่อขยาย)</p>
+                    <img id="qr-image" src="" class="w-32 h-32 mx-auto rounded-lg shadow-sm border border-gray-300 cursor-pointer object-cover hidden" onclick="openImageModal(event, this.src)">
                 </div>
             </div>
 
@@ -104,18 +106,41 @@
         let compressedSlip = null;
         let countdownTimer;
 
-        // ดึง QR Code รับเงินของร้าน (ถ้ามี)
+        // ดึงการตั้งค่าร้าน (พร้อมเพย์ & QR) มาแสดง
         onSnapshot(doc(db, "store_settings", "payment_info"), (docSnap) => {
             if(docSnap.exists()) {
                 const data = docSnap.data();
+                let hasData = false;
+
+                // ตรวจสอบและแสดงเลขพร้อมเพย์
+                if(data.promptpay_text && data.promptpay_text.trim() !== '') {
+                    document.getElementById('promptpay-display').innerText = data.promptpay_text;
+                    document.getElementById('promptpay-display').classList.remove('hidden');
+                    hasData = true;
+                } else {
+                    document.getElementById('promptpay-display').classList.add('hidden');
+                }
+
+                // ตรวจสอบและแสดงรูป QR
                 if(data.qr_base64) {
                     document.getElementById('qr-image').src = data.qr_base64;
+                    document.getElementById('qr-image').classList.remove('hidden');
+                    document.getElementById('qr-hint').classList.remove('hidden');
+                    hasData = true;
+                } else {
+                    document.getElementById('qr-image').classList.add('hidden');
+                    document.getElementById('qr-hint').classList.add('hidden');
+                }
+
+                // แสดง/ซ่อน กล่องรวม
+                if(hasData) {
                     document.getElementById('qr-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('qr-container').classList.add('hidden');
                 }
             }
         });
 
-        // Image Compression Function
         window.compressImage = function(file, callback) {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -135,7 +160,6 @@
             };
         };
 
-        // Fetch Tickets Real-time
         onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
             allTickets = [];
             snapshot.forEach((docSnap) => {
@@ -181,7 +205,6 @@
 
         document.getElementById('searchInput').addEventListener('input', renderTickets);
 
-        // ป๊อปอัปดูรูปขยาย
         window.openImageModal = function(event, src) {
             event.stopPropagation();
             document.getElementById('modal-image').src = src;
@@ -193,7 +216,6 @@
             document.getElementById('modal-image').src = '';
         };
 
-        // ระบบตะกร้า
         window.toggleCart = function(id) {
             const ticket = allTickets.find(t => t.id === id);
             const index = cart.findIndex(t => t.id === id);
@@ -219,7 +241,6 @@
         window.openCheckout = () => document.getElementById('checkout-modal').classList.remove('hidden');
         window.closeModal = (id) => document.getElementById('checkout-modal').classList.add('hidden');
 
-        // การจอง 5 นาที
         window.confirmOrder = async function() {
             const name = document.getElementById('buyer-name').value;
             const phone = document.getElementById('buyer-phone').value;
@@ -255,25 +276,24 @@
             }
         };
 
-        // ================= (เพิ่มใหม่) กดยกเลิกการซื้อ (ดึงสลากกลับ) =================
         window.cancelPayment = async function() {
             if(!confirm("ต้องการยกเลิกการสั่งซื้อและคืนสลากกลับขึ้นแผงใช่หรือไม่?")) return;
             
-            clearInterval(countdownTimer); // หยุดเวลา
-            document.getElementById('payment-modal').classList.add('hidden'); // ซ่อนหน้าชำระเงิน
+            clearInterval(countdownTimer);
+            document.getElementById('payment-modal').classList.add('hidden');
             
             try {
                 const batch = writeBatch(db);
                 cart.forEach(item => {
                     batch.update(doc(db, "lottery_tickets", item.id), { 
-                        status: 'AVAILABLE', // คืนสถานะให้ว่าง
+                        status: 'AVAILABLE',
                         reserved_at: 0,
                         buyer_name: ""
                     });
                 });
                 await batch.commit(); 
 
-                cart = []; // ล้างตะกร้า
+                cart = [];
                 updateCartUI();
                 renderTickets();
                 alert("ยกเลิกรายการสำเร็จ สลากถูกนำกลับขึ้นแผงแล้วค่ะ");
@@ -282,7 +302,6 @@
                 alert("เกิดข้อผิดพลาดในการยกเลิก");
             }
         };
-        // ================================================================
 
         window.handleSlipSelect = function(e) {
             const file = e.target.files[0];
