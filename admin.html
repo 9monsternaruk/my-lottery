@@ -114,6 +114,12 @@
                     <img id="qr-preview-src" class="w-32 h-32 mx-auto border rounded shadow-sm object-contain bg-white">
                 </div>
                 <button onclick="saveQrSettings()" id="btn-save-qr" class="w-full bg-slate-800 text-white py-3 rounded font-bold mt-4 hover:bg-slate-700 transition">บันทึกการตั้งค่าทั้งหมด</button>
+                
+                <hr class="my-8 border-gray-200">
+                
+                <h3 class="font-bold mb-2 text-red-600">🗑️ โซนอันตราย (Danger Zone)</h3>
+                <p class="text-sm text-gray-500 mb-4">ใช้สำหรับลบข้อมูลสลากและประวัติการขายเก่าทั้งหมด เพื่อเตรียมแผงสำหรับงวดถัดไป (รูป QR Code และพร้อมเพย์จะไม่ถูกลบ)</p>
+                <button onclick="clearAllData()" id="btn-clear-all" class="w-full bg-red-100 text-red-600 border border-red-300 py-3 rounded font-bold hover:bg-red-600 hover:text-white transition">🗑️ ล้างข้อมูลแผงหวย (ขึ้นงวดใหม่)</button>
             </div>
         </div>
     </div>
@@ -163,7 +169,7 @@
     <div id="custom-dialog" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-[200] backdrop-blur-sm transition-opacity">
         <div class="bg-white p-6 rounded-2xl w-10/12 max-w-sm text-center shadow-2xl transform transition-all scale-100">
             <div id="dialog-icon" class="text-5xl mb-4">✅</div>
-            <h3 id="dialog-message" class="text-lg font-bold text-slate-800 mb-6">ข้อความ</h3>
+            <h3 id="dialog-message" class="text-lg font-bold text-slate-800 mb-6 whitespace-pre-line">ข้อความ</h3>
             <div class="flex gap-3 justify-center">
                 <button id="btn-dialog-cancel" class="hidden w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">ยกเลิก</button>
                 <button id="btn-dialog-ok" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-700 shadow-md transition">ตกลง</button>
@@ -175,7 +181,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXuj7Pl1JnBn2Y7BtyzkHHQm4MQH-isrM",
@@ -306,6 +312,36 @@
             qrBase64 = null;
             document.getElementById('qr-upload-preview').classList.add('hidden');
             document.getElementById('btn-save-qr').innerText = "บันทึกการตั้งค่าทั้งหมด";
+        };
+
+        // 🗑️ ฟังก์ชันล้างข้อมูลขึ้นงวดใหม่
+        window.clearAllData = async () => {
+            const isConfirm = await customConfirm("⚠️ คำเตือนขั้นสุดยอด!\n\nคุณกำลังจะลบ 'สลากทั้งหมด' และ 'ประวัติการขายทั้งหมด' เพื่อเตรียมขึ้นงวดใหม่\n\n(ลบแล้วกู้คืนไม่ได้) ต้องการทำต่อหรือไม่?", "🚨");
+            if(!isConfirm) return;
+
+            const isDoubleConfirm = await customConfirm("กรุณายืนยันอีกครั้ง!\n\nต้องการล้างข้อมูลแผงหวยให้ว่างเปล่า ใช่หรือไม่?", "🗑️");
+            if(!isDoubleConfirm) return;
+
+            document.getElementById('btn-clear-all').innerText = "กำลังล้างข้อมูล...";
+            try {
+                // ลบสลากทั้งหมด
+                const ticketsSnap = await getDocs(collection(db, "lottery_tickets"));
+                const batch1 = writeBatch(db);
+                ticketsSnap.forEach(docSnap => batch1.delete(docSnap.ref));
+                await batch1.commit();
+
+                // ลบออเดอร์ทั้งหมด
+                const ordersSnap = await getDocs(collection(db, "lottery_orders"));
+                const batch2 = writeBatch(db);
+                ordersSnap.forEach(docSnap => batch2.delete(docSnap.ref));
+                await batch2.commit();
+
+                await customAlert("ล้างข้อมูลสำเร็จ!\nแผงหวยของคุณว่างเปล่าพร้อมลงงวดใหม่แล้วครับ", "✨");
+                location.reload();
+            } catch(e) {
+                await customAlert("เกิดข้อผิดพลาด: " + e.message, "❌");
+                document.getElementById('btn-clear-all').innerText = "🗑️ ล้างข้อมูลแผงหวย (ขึ้นงวดใหม่)";
+            }
         };
 
         window.resetImage = () => {
