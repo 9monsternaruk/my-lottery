@@ -8,56 +8,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; } </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-2 md:p-10 pb-24">
 
     <!-- Login Area -->
     <div id="login-section" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
         <h2 class="text-2xl font-bold text-center mb-6">🔑 แอดมินล็อกอิน</h2>
-        <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded mb-4 outline-none">
-        <input type="password" id="password" placeholder="Password" class="w-full p-3 border rounded mb-6 outline-none">
-        <button onclick="login()" class="w-full bg-slate-800 text-white py-3 rounded font-bold">เข้าสู่ระบบ</button>
+        <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded mb-4 outline-none focus:border-teal-500">
+        <input type="password" id="password" placeholder="Password" class="w-full p-3 border rounded mb-6 outline-none focus:border-teal-500">
+        <button onclick="login()" class="w-full bg-slate-800 text-white py-3 rounded font-bold hover:bg-slate-700 transition">เข้าสู่ระบบ</button>
     </div>
 
     <!-- Admin Dashboard -->
     <div id="dashboard-section" class="max-w-4xl mx-auto hidden">
         <div class="flex justify-between items-center bg-slate-800 text-white p-4 rounded-t-lg">
-            <h1 class="text-xl font-bold">⚙️ ระบบจัดการร้าน</h1>
-            <button onclick="logout()" class="text-sm bg-slate-600 px-3 py-1 rounded">ออกระบบ</button>
+            <h1 class="text-lg md:text-xl font-bold">⚙️ ระบบจัดการร้าน</h1>
+            <button onclick="logout()" class="text-sm bg-slate-600 px-3 py-1 rounded hover:bg-slate-500">ออกระบบ</button>
         </div>
 
-        <div class="bg-white border-b flex overflow-x-auto text-center font-semibold text-gray-600">
+        <div class="bg-white border-b flex overflow-x-auto text-center font-semibold text-gray-600 text-sm md:text-base">
             <div onclick="switchTab('tab-add')" id="btn-add" class="flex-1 p-3 cursor-pointer text-teal-600 border-b-2 border-teal-600 whitespace-nowrap">➕ เพิ่มสลาก</div>
-            <div onclick="switchTab('tab-review')" id="btn-review" class="flex-1 p-3 cursor-pointer whitespace-nowrap">🟡 รอตรวจสลิป</div>
-            <div onclick="switchTab('tab-all')" id="btn-all" class="flex-1 p-3 cursor-pointer whitespace-nowrap">📦 สลากทั้งหมด</div>
+            <div onclick="switchTab('tab-review')" id="btn-review" class="flex-1 p-3 cursor-pointer whitespace-nowrap">🟡 รอตรวจ</div>
+            <div onclick="switchTab('tab-all')" id="btn-all" class="flex-1 p-3 cursor-pointer whitespace-nowrap">📦 ทั้งหมด</div>
+            <!-- เพิ่มแท็บตั้งค่า -->
+            <div onclick="switchTab('tab-settings')" id="btn-settings" class="flex-1 p-3 cursor-pointer whitespace-nowrap">⚙️ ตั้งค่า</div>
         </div>
 
-        <div class="bg-white p-6 rounded-b-lg shadow-md min-h-[400px]">
+        <div class="bg-white p-4 md:p-6 rounded-b-lg shadow-md min-h-[400px]">
             
             <!-- Tab: Add Ticket -->
             <div id="tab-add">
                 <h3 class="font-bold mb-4">นำเข้าสลากใบใหม่</h3>
-                <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 mb-4 hover:bg-gray-100">
+                <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 mb-4 hover:bg-gray-100 transition">
                     <div class="flex flex-col items-center justify-center pt-5 pb-6">
                         <p class="text-gray-500 font-bold" id="upload-text">📸 แตะเพื่อถ่ายรูป/เลือกรูปสลาก</p>
                     </div>
                     <input type="file" id="ticket-img" accept="image/*" class="hidden" onchange="previewImage(event)">
                 </label>
                 <div id="img-preview" class="hidden mb-4 text-center">
-                    <img id="preview-src" class="h-32 mx-auto rounded shadow">
+                    <img id="preview-src" class="h-32 mx-auto rounded shadow object-cover">
                     <p class="text-xs text-gray-500 mt-2">บีบอัดรูปภาพแล้ว</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="text-sm text-gray-600">เลขสลาก (6 หลัก) *</label>
-                        <input type="text" id="ticket-no" class="w-full p-2 border rounded mt-1 outline-none" maxlength="6">
+                        <input type="text" id="ticket-no" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500" maxlength="6">
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">ราคา (เว้นว่างได้)</label>
-                        <input type="number" id="ticket-price" class="w-full p-2 border rounded mt-1 outline-none" placeholder="เช่น 80">
+                        <input type="number" id="ticket-price" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500" placeholder="เช่น 80">
                     </div>
                 </div>
-                <button onclick="saveTicket()" id="btn-save" class="w-full bg-slate-800 text-white py-3 rounded font-bold">บันทึกสลากลงแผง</button>
+                <button onclick="saveTicket()" id="btn-save" class="w-full bg-slate-800 text-white py-3 rounded font-bold hover:bg-slate-700 transition">บันทึกสลากลงแผง</button>
             </div>
 
             <!-- Tab: Review -->
@@ -72,6 +74,62 @@
                 <div id="all-list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
             </div>
 
+            <!-- ================= (เพิ่มใหม่) Tab: Settings (ตั้งค่าร้าน) ================= -->
+            <div id="tab-settings" class="hidden">
+                <h3 class="font-bold mb-4">⚙️ ตั้งค่าร้าน (QR Code รับเงิน)</h3>
+                
+                <div class="border rounded-lg p-4 bg-gray-50 text-center mb-4">
+                    <p class="text-sm text-gray-600 mb-2 font-bold">QR Code ปัจจุบันของคุณ</p>
+                    <img id="current-qr-preview" class="w-40 h-40 mx-auto object-contain bg-white border rounded shadow-sm hidden">
+                    <p id="no-qr-text" class="text-red-500 text-sm font-bold my-4">ยังไม่ได้ตั้งค่า QR Code</p>
+                </div>
+
+                <label class="block w-full bg-blue-100 text-blue-700 p-3 rounded cursor-pointer font-bold mb-4 border border-blue-300 text-center hover:bg-blue-200 transition">
+                    📸 เลือกรูป QR Code ใหม่
+                    <input type="file" accept="image/*" class="hidden" onchange="previewQr(event)">
+                </label>
+                
+                <div id="qr-upload-preview" class="hidden text-center mb-4">
+                    <p class="text-xs text-gray-500 mb-1">ตัวอย่างภาพที่จะบันทึก</p>
+                    <img id="qr-preview-src" class="w-32 h-32 mx-auto border rounded shadow-sm object-contain bg-white">
+                    <button onclick="saveQrSettings()" id="btn-save-qr" class="w-full bg-slate-800 text-white py-3 rounded font-bold mt-4 hover:bg-slate-700 transition">อัปเดต QR Code</button>
+                </div>
+            </div>
+            <!-- ================================================================ -->
+
+        </div>
+    </div>
+
+    <!-- Modal: แก้ไขข้อมูลสลาก -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-sm shadow-xl">
+            <h3 class="font-bold text-lg mb-4 text-slate-800">✏️ แก้ไขข้อมูลสลาก</h3>
+            <input type="hidden" id="edit-id">
+            
+            <div class="mb-3">
+                <label class="text-sm text-gray-600 font-bold">เลขสลาก (6 หลัก)</label>
+                <input type="text" id="edit-no" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500" maxlength="6">
+            </div>
+            
+            <div class="mb-3">
+                <label class="text-sm text-gray-600 font-bold">ราคา (บาท) - ลบออกเพื่อซ่อนราคาได้</label>
+                <input type="number" id="edit-price" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500">
+            </div>
+
+            <div class="mb-5">
+                <label class="text-sm text-gray-600 font-bold">สถานะสลาก</label>
+                <select id="edit-status" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500">
+                    <option value="AVAILABLE">🟢 ว่าง (พร้อมขาย)</option>
+                    <option value="RESERVED">🟡 กำลังจอง (5 นาที)</option>
+                    <option value="PAYMENT_REVIEW">🟠 แจ้งโอนแล้ว (รอตรวจ)</option>
+                    <option value="SOLD">🔴 ขายแล้ว</option>
+                </select>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="closeEditModal()" class="w-1/3 bg-gray-300 hover:bg-gray-400 py-2 rounded font-bold transition">ยกเลิก</button>
+                <button onclick="submitEdit()" id="btn-submit-edit" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-bold transition">บันทึกการแก้ไข</button>
+            </div>
         </div>
     </div>
 
@@ -79,7 +137,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+        // เพิ่ม setDoc เข้ามาเพื่อใช้เซฟการตั้งค่าร้าน
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXuj7Pl1JnBn2Y7BtyzkHHQm4MQH-isrM",
@@ -95,8 +154,8 @@
         const db = getFirestore(app);
 
         let currentBase64 = null;
+        let qrBase64 = null;
 
-        // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('login-section').classList.add('hidden');
@@ -115,17 +174,68 @@
         };
         window.logout = () => signOut(auth);
 
-        // Tab Switcher
+        // ================= สลับหน้าต่าง (อัปเดตเพิ่มแท็บตั้งค่า) =================
         window.switchTab = (tabId) => {
-            ['tab-add', 'tab-review', 'tab-all'].forEach(t => document.getElementById(t).classList.add('hidden'));
-            ['btn-add', 'btn-review', 'btn-all'].forEach(b => {
+            ['tab-add', 'tab-review', 'tab-all', 'tab-settings'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['btn-add', 'btn-review', 'btn-all', 'btn-settings'].forEach(b => {
                 document.getElementById(b).classList.remove('text-teal-600', 'border-b-2', 'border-teal-600');
             });
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById(tabId.replace('tab', 'btn')).classList.add('text-teal-600', 'border-b-2', 'border-teal-600');
         };
 
-        // Image Compression (Base64)
+        // ================= ระบบ QR Code (Settings) =================
+        // ดึง QR Code เดิมมาแสดง
+        onSnapshot(doc(db, "store_settings", "payment_info"), (docSnap) => {
+            if(docSnap.exists() && docSnap.data().qr_base64) {
+                document.getElementById('current-qr-preview').src = docSnap.data().qr_base64;
+                document.getElementById('current-qr-preview').classList.remove('hidden');
+                document.getElementById('no-qr-text').classList.add('hidden');
+            }
+        });
+
+        window.previewQr = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500; // บีบให้พอดี QR Code
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    qrBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('qr-upload-preview').classList.remove('hidden');
+                    document.getElementById('qr-preview-src').src = qrBase64;
+                };
+            };
+        };
+
+        window.saveQrSettings = async () => {
+            if(!qrBase64) return;
+            document.getElementById('btn-save-qr').innerText = "กำลังบันทึก...";
+            
+            // setDoc (merge: true) สร้างไฟล์ใหม่ถ้ายังไม่มี หรือแก้ของเดิม
+            await setDoc(doc(db, "store_settings", "payment_info"), {
+                qr_base64: qrBase64,
+                updated_at: Date.now()
+            }, { merge: true });
+            
+            alert("บันทึก QR Code รับเงินสำเร็จ!");
+            qrBase64 = null;
+            document.getElementById('qr-upload-preview').classList.add('hidden');
+            document.getElementById('btn-save-qr').innerText = "อัปเดต QR Code";
+        };
+        // =======================================================
+
+
         window.previewImage = (e) => {
             const file = e.target.files[0];
             if(!file) return;
@@ -184,15 +294,15 @@
                     if(order.status === 'PAYMENT_REVIEW') {
                         let tList = order.tickets.map(t => t.no).join(', ');
                         list.innerHTML += `
-                            <div class="border rounded p-4 flex flex-col md:flex-row gap-4">
-                                <img src="${order.slip_base64}" class="w-32 object-contain rounded cursor-pointer" onclick="window.open('${order.slip_base64}')">
+                            <div class="border rounded p-4 flex flex-col md:flex-row gap-4 bg-white shadow-sm">
+                                <img src="${order.slip_base64}" class="w-32 object-contain rounded cursor-pointer border" onclick="window.open('${order.slip_base64}')">
                                 <div class="flex-1">
                                     <p><b>ลูกค้า:</b> ${order.buyer_name} (${order.buyer_phone})</p>
                                     <p><b>ยอดโอน:</b> <span class="text-teal-600 font-bold">${order.total_price} บาท</span></p>
                                     <p class="text-sm text-gray-500">เลข: ${tList}</p>
                                     <div class="mt-3 flex gap-2">
                                         <button onclick="approveOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-green-600 text-white px-4 py-1 rounded">✅ รับเงินแล้ว (ขาย)</button>
-                                        <button onclick="rejectOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-red-500 text-white px-4 py-1 rounded">❌ ไม่พบยอด (ดึงกลับ)</button>
+                                        <button onclick="rejectOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-red-500 text-white px-4 py-1 rounded">❌ ปฏิเสธ (ดึงกลับ)</button>
                                     </div>
                                 </div>
                             </div>
@@ -205,20 +315,69 @@
             onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
                 const list = document.getElementById('all-list');
                 list.innerHTML = '';
+                
+                let ticketsArray = [];
                 snapshot.forEach(docSnap => {
-                    const t = docSnap.data();
-                    let badge = t.status === 'AVAILABLE' ? '🟢 ว่าง' : (t.status === 'RESERVED' ? '🟡 จอง' : (t.status === 'SOLD' ? '🔴 ขายแล้ว' : '🔵 รอตรวจ'));
+                    ticketsArray.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                ticketsArray.sort((a, b) => b.created_at - a.created_at);
+
+                ticketsArray.forEach(t => {
+                    let currentStatus = t.status;
+                    if(t.status === 'RESERVED' && (Date.now() - t.reserved_at > 300000)) currentStatus = 'AVAILABLE';
+                    
+                    let badge = currentStatus === 'AVAILABLE' ? '🟢 ว่าง' : (currentStatus === 'RESERVED' ? '🟡 จอง' : (currentStatus === 'SOLD' ? '🔴 ขายแล้ว' : '🟠 รอตรวจ'));
+
                     list.innerHTML += `
-                        <div class="border rounded p-2 text-center text-sm relative">
-                            <button onclick="deleteT('${docSnap.id}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">X</button>
-                            <img src="${t.image_base64}" class="h-16 mx-auto object-cover mb-1">
-                            <p class="font-bold">${t.ticket_no}</p>
-                            <p class="${t.status === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'} font-bold">${badge}</p>
+                        <div class="border rounded p-2 text-center text-sm relative bg-white shadow-sm">
+                            <button onclick="deleteT('${t.id}')" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">X</button>
+                            <button onclick="openEditModal('${t.id}', '${t.ticket_no}', '${t.price || ''}', '${currentStatus}')" class="absolute top-1 left-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">✏️</button>
+                            
+                            <img src="${t.image_base64}" class="h-16 mx-auto object-cover mb-2 border rounded">
+                            <p class="font-bold text-lg">${t.ticket_no}</p>
+                            <p class="text-[11px] text-gray-500 mb-1">${t.price ? t.price+' บาท' : 'ไม่มีราคา'}</p>
+                            <p class="${currentStatus === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'} font-bold bg-gray-50 py-1 rounded">${badge}</p>
                         </div>
                     `;
                 });
             });
         }
+
+        // ระบบ Edit สลาก
+        window.openEditModal = (id, no, price, status) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-no').value = no;
+            document.getElementById('edit-price').value = price;
+            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        };
+
+        window.closeEditModal = () => {
+            document.getElementById('edit-modal').classList.add('hidden');
+        };
+
+        window.submitEdit = async () => {
+            const id = document.getElementById('edit-id').value;
+            const no = document.getElementById('edit-no').value;
+            const price = document.getElementById('edit-price').value;
+            const status = document.getElementById('edit-status').value;
+            
+            if(!no) return alert("กรุณาใส่เลขสลาก");
+            
+            document.getElementById('btn-submit-edit').innerText = "กำลังบันทึก...";
+            try {
+                await updateDoc(doc(db, "lottery_tickets", id), {
+                    ticket_no: no,
+                    price: price ? price : null,
+                    status: status
+                });
+                closeEditModal();
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการบันทึก: " + e.message);
+            } finally {
+                document.getElementById('btn-submit-edit').innerText = "บันทึกการแก้ไข";
+            }
+        };
 
         window.approveOrder = async (orderId, ticketsJson) => {
             if(!confirm("ยืนยันว่าได้รับยอดเงินแล้วใช่หรือไม่?")) return;
