@@ -12,12 +12,12 @@
     </style>
 </head>
 <body class="pb-28">
-    <!-- Header (ธีมสีแดง) -->
+    <!-- Header -->
     <header class="bg-gradient-to-b from-red-600 to-red-700 text-white pt-5 pb-10 px-4 shadow-md sticky top-0 z-20 rounded-b-2xl">
         <div class="flex justify-between items-center w-full max-w-4xl mx-auto">
             <div class="flex items-center gap-2">
                 <span class="text-2xl">🐉</span>
-                <h1 class="text-lg md:text-xl font-bold tracking-wide">ซื้อแล้วรวย หวยเงินล้าน</h1>
+                <h1 class="text-lg md:text-xl font-bold tracking-wide">แผงหวย พี่ธง</h1>
             </div>
             <button onclick="openCheckModal()" class="bg-red-800 hover:bg-red-900 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-inner transition flex items-center gap-1">
                 🧾 สลากของฉัน
@@ -45,7 +45,6 @@
             <h3 class="font-bold text-gray-800 border-l-4 border-red-600 pl-2">สลากทั้งหมด</h3>
             <span id="ticket-count" class="text-xs text-gray-500 font-bold">กำลังโหลด...</span>
         </div>
-
         <div id="ticket-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <p class="col-span-2 text-center text-gray-500 py-10">กำลังโหลดแผงหวย...</p>
         </div>
@@ -108,7 +107,6 @@
                 <input type="file" id="slip-file" accept="image/*" class="hidden" onchange="handleSlipSelect(event)">
             </label>
             <p id="slip-name" class="text-sm text-green-600 mb-4 font-bold hidden">✅ แนบสลิปเรียบร้อยแล้ว!</p>
-
             <button onclick="submitPayment()" id="btn-submit-slip" class="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg opacity-50 pointer-events-none transition">แจ้งโอนเงิน</button>
         </div>
     </div>
@@ -128,6 +126,18 @@
 
             <div id="my-tickets-result" class="overflow-y-auto flex-1 space-y-4 pr-1">
                 <p class="text-center text-gray-400 text-sm mt-10">กรอกเบอร์โทรศัพท์เพื่อค้นหาประวัติการสั่งซื้อ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛠️ Custom Alert & Confirm Modal (เพิ่มใหม่ ไร้ลิงก์กวนใจ) -->
+    <div id="custom-dialog" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-[200] backdrop-blur-sm transition-opacity">
+        <div class="bg-white p-6 rounded-2xl w-10/12 max-w-sm text-center shadow-2xl transform transition-all scale-100">
+            <div id="dialog-icon" class="text-5xl mb-4">✅</div>
+            <h3 id="dialog-message" class="text-lg font-bold text-slate-800 mb-6">ข้อความ</h3>
+            <div class="flex gap-3 justify-center">
+                <button id="btn-dialog-cancel" class="hidden w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">ยกเลิก</button>
+                <button id="btn-dialog-ok" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 shadow-md transition">ตกลง</button>
             </div>
         </div>
     </div>
@@ -153,6 +163,44 @@
         let cart = [];
         let compressedSlip = null;
         let countdownTimer;
+
+        // 🛠️ ฟังก์ชัน Custom Dialog 
+        window.customAlert = (message, icon = '✅') => {
+            return new Promise((resolve) => {
+                document.getElementById('dialog-icon').innerText = icon;
+                document.getElementById('dialog-message').innerText = message;
+                document.getElementById('btn-dialog-cancel').classList.add('hidden');
+                document.getElementById('btn-dialog-ok').classList.remove('w-1/2');
+                document.getElementById('btn-dialog-ok').classList.add('w-full', 'bg-red-600', 'hover:bg-red-700');
+                
+                document.getElementById('custom-dialog').classList.remove('hidden');
+                document.getElementById('btn-dialog-ok').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(true);
+                };
+            });
+        };
+
+        window.customConfirm = (message, icon = '❓') => {
+            return new Promise((resolve) => {
+                document.getElementById('dialog-icon').innerText = icon;
+                document.getElementById('dialog-message').innerText = message;
+                document.getElementById('btn-dialog-cancel').classList.remove('hidden');
+                document.getElementById('btn-dialog-ok').classList.remove('w-full', 'bg-red-600', 'hover:bg-red-700');
+                document.getElementById('btn-dialog-ok').classList.add('w-1/2', 'bg-slate-800', 'hover:bg-slate-700');
+                
+                document.getElementById('custom-dialog').classList.remove('hidden');
+                
+                document.getElementById('btn-dialog-ok').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(true);
+                };
+                document.getElementById('btn-dialog-cancel').onclick = () => {
+                    document.getElementById('custom-dialog').classList.add('hidden');
+                    resolve(false);
+                };
+            });
+        };
 
         // Load QR Code
         onSnapshot(doc(db, "store_settings", "payment_info"), (docSnap) => {
@@ -231,9 +279,12 @@
         }
 
         document.getElementById('searchInput').addEventListener('input', renderTickets);
-        window.randomTicket = () => {
+        window.randomTicket = async () => {
             const availableTickets = allTickets.filter(t => t.status === 'AVAILABLE');
-            if (availableTickets.length === 0) return alert("ขออภัยครับ ขณะนี้ไม่มีสลากว่าง");
+            if (availableTickets.length === 0) {
+                await customAlert("ขออภัยครับ ขณะนี้ไม่มีสลากว่าง", "😢");
+                return;
+            }
             document.getElementById('searchInput').value = availableTickets[Math.floor(Math.random() * availableTickets.length)].ticket_no;
             renderTickets();
         };
@@ -268,7 +319,7 @@
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         window.openCheckModal = () => document.getElementById('check-modal').classList.remove('hidden');
 
-        // ฟังก์ชันระบบเช็คสลาก (เพิ่มใหม่)
+        // ฟังก์ชันระบบเช็คสลาก
         window.fetchMyTickets = async () => {
             const phone = document.getElementById('check-phone').value.trim();
             const resultDiv = document.getElementById('my-tickets-result');
@@ -281,7 +332,6 @@
             resultDiv.innerHTML = '<p class="text-center text-gray-500 text-sm mt-4">กำลังค้นหา...</p>';
 
             try {
-                // ค้นหาออเดอร์ของเบอร์นี้
                 const q = query(collection(db, "lottery_orders"), where("buyer_phone", "==", phone));
                 const querySnapshot = await getDocs(q);
                 
@@ -293,7 +343,6 @@
                 resultDiv.innerHTML = '';
                 querySnapshot.forEach((docSnap) => {
                     const order = docSnap.data();
-                    // แสดงเฉพาะรอตรวจ และ ซื้อสำเร็จ
                     if(order.status === 'PAYMENT_REVIEW' || order.status === 'COMPLETED') {
                         let statusBadge = order.status === 'COMPLETED' 
                             ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">✅ ซื้อสำเร็จ (แอดมินยืนยันแล้ว)</span>' 
@@ -304,7 +353,6 @@
 
                         let ticketHtml = '';
                         order.tickets.forEach(tInfo => {
-                            // พยายามหารูปใบจริงจาก allTickets มาโชว์
                             let foundTicket = allTickets.find(t => t.id === tInfo.id);
                             let imgSrc = foundTicket ? foundTicket.image_base64 : 'https://placehold.co/600x400/eee/999?text=ไม่มีรูปภาพ';
                             
@@ -343,11 +391,13 @@
             }
         };
 
-
         window.confirmOrder = async () => {
             const name = document.getElementById('buyer-name').value;
             const phone = document.getElementById('buyer-phone').value;
-            if(!name || !phone) return alert("กรุณากรอกชื่อและเบอร์โทรให้ครบถ้วน");
+            if(!name || !phone) {
+                await customAlert("กรุณากรอกชื่อและเบอร์โทรให้ครบถ้วน", "⚠️");
+                return;
+            }
 
             document.getElementById('btn-confirm').innerText = "กำลังล็อคสลาก...";
             document.getElementById('btn-confirm').classList.add('opacity-70', 'pointer-events-none');
@@ -371,14 +421,16 @@
                 document.getElementById('pay-total').innerText = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0).toLocaleString();
                 startTimer(300); 
             } catch (e) {
-                alert(e.message);
+                await customAlert(e.message, "❌");
                 document.getElementById('btn-confirm').innerText = "ยืนยันคำสั่งซื้อ";
                 document.getElementById('btn-confirm').classList.remove('opacity-70', 'pointer-events-none');
             }
         };
 
         window.cancelPayment = async () => {
-            if(!confirm("ต้องการยกเลิกการสั่งซื้อและคืนสลากกลับขึ้นแผงใช่หรือไม่?")) return;
+            const isConfirm = await customConfirm("ต้องการยกเลิกการสั่งซื้อและคืนสลากกลับขึ้นแผงใช่หรือไม่?", "❓");
+            if(!isConfirm) return;
+            
             clearInterval(countdownTimer);
             document.getElementById('payment-modal').classList.add('hidden');
             try {
@@ -390,7 +442,9 @@
                 cart = []; updateCartUI(); renderTickets();
                 document.getElementById('btn-confirm').innerText = "ยืนยันคำสั่งซื้อ";
                 document.getElementById('btn-confirm').classList.remove('opacity-70', 'pointer-events-none');
-            } catch (e) { alert("เกิดข้อผิดพลาดในการยกเลิก"); }
+            } catch (e) { 
+                await customAlert("เกิดข้อผิดพลาดในการยกเลิก", "❌"); 
+            }
         };
 
         window.compressImage = function(file, callback) {
@@ -439,20 +493,24 @@
                 const batch = writeBatch(db);
                 cart.forEach(item => { batch.update(doc(db, "lottery_tickets", item.id), { status: 'PAYMENT_REVIEW' }); });
                 await batch.commit();
-                alert("แจ้งโอนเงินสำเร็จ! กรุณารอแอดมินตรวจสอบ");
+                
+                await customAlert("แจ้งโอนเงินสำเร็จ! กรุณารอแอดมินตรวจสอบ", "🎉");
                 location.reload(); 
-            } catch(e) { alert("เกิดข้อผิดพลาดในการแจ้งโอน"); }
+            } catch(e) { 
+                await customAlert("เกิดข้อผิดพลาดในการแจ้งโอน", "❌"); 
+                document.getElementById('btn-submit-slip').innerText = "แจ้งโอนเงิน";
+            }
         };
 
         function startTimer(duration) {
             let timer = duration, minutes, seconds;
-            countdownTimer = setInterval(() => {
+            countdownTimer = setInterval(async () => {
                 minutes = parseInt(timer / 60, 10); seconds = parseInt(timer % 60, 10);
                 minutes = minutes < 10 ? "0" + minutes : minutes; seconds = seconds < 10 ? "0" + seconds : seconds;
                 document.getElementById('timer').textContent = minutes + ":" + seconds;
                 if (--timer < 0) {
                     clearInterval(countdownTimer);
-                    alert("หมดเวลาทำรายการ สลากถูกนำกลับขึ้นแผง");
+                    await customAlert("หมดเวลาทำรายการ สลากถูกนำกลับขึ้นแผง", "⏱");
                     location.reload();
                 }
             }, 1000);
