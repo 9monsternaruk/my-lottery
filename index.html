@@ -3,80 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แผงหวยออนไลน์</title>
+    <title>ระบบแอดมิน - แผงหวยออนไลน์</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; } </style>
 </head>
-<body class="pb-24">
-    <!-- Header -->
-    <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-40">
-        <h1 class="text-xl font-bold text-center">แผงหวยออนไลน์ พี่ธง</h1>
-        <div class="mt-3">
-            <input type="text" id="searchInput" placeholder="🔍 ค้นหาเลขสลาก (เช่น 123)" class="w-full p-2 rounded text-black outline-none">
-        </div>
-    </header>
+<body class="p-4 md:p-10 pb-24">
 
-    <!-- Ticket Grid -->
-    <div class="container mx-auto p-4">
-        <div id="ticket-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <p class="col-span-2 text-center text-gray-500 py-10">กำลังโหลดแผงหวย...</p>
-        </div>
+    <!-- Login Area -->
+    <div id="login-section" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
+        <h2 class="text-2xl font-bold text-center mb-6">🔑 แอดมินล็อกอิน</h2>
+        <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded mb-4 outline-none">
+        <input type="password" id="password" placeholder="Password" class="w-full p-3 border rounded mb-6 outline-none">
+        <button onclick="login()" class="w-full bg-slate-800 text-white py-3 rounded font-bold">เข้าสู่ระบบ</button>
     </div>
 
-    <!-- Cart (Sticky Bottom) -->
-    <div id="cart-bar" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex justify-between items-center hidden z-30">
-        <div>
-            <p class="text-sm text-gray-600">เลือกแล้ว <span id="cart-count" class="font-bold text-teal-600">0</span> ใบ</p>
-            <p class="text-lg font-bold">รวม <span id="cart-total">0</span> บาท</p>
+    <!-- Admin Dashboard -->
+    <div id="dashboard-section" class="max-w-4xl mx-auto hidden">
+        <div class="flex justify-between items-center bg-slate-800 text-white p-4 rounded-t-lg">
+            <h1 class="text-xl font-bold">⚙️ ระบบจัดการร้าน</h1>
+            <button onclick="logout()" class="text-sm bg-slate-600 px-3 py-1 rounded">ออกระบบ</button>
         </div>
-        <button onclick="openCheckout()" class="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold text-lg shadow-md">แจ้งซื้อเลย</button>
-    </div>
 
-    <!-- Image Modal (ป๊อปอัปดูรูปเต็มใบ) -->
-    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-[60] cursor-pointer" onclick="closeImageModal()">
-        <span class="absolute top-4 right-4 text-white text-4xl font-bold">&times;</span>
-        <img id="modal-image" class="max-w-[95%] max-h-[90vh] object-contain rounded-lg shadow-2xl">
-    </div>
-
-    <!-- Checkout Modal -->
-    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md">
-            <h2 class="text-xl font-bold mb-4">ข้อมูลผู้ซื้อ</h2>
-            <input type="text" id="buyer-name" placeholder="ชื่อ / ชื่อเล่น" class="w-full p-3 border rounded mb-3 outline-none">
-            <input type="tel" id="buyer-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 border rounded mb-4 outline-none">
-            <div class="flex gap-2">
-                <button onclick="closeModal('checkout-modal')" class="w-1/3 bg-gray-300 py-2 rounded font-bold">ยกเลิก</button>
-                <button onclick="confirmOrder()" class="w-2/3 bg-teal-600 text-white py-2 rounded font-bold" id="btn-confirm">ยืนยันคำสั่งซื้อ</button>
-            </div>
+        <div class="bg-white border-b flex overflow-x-auto text-center font-semibold text-gray-600">
+            <div onclick="switchTab('tab-add')" id="btn-add" class="flex-1 p-3 cursor-pointer text-teal-600 border-b-2 border-teal-600 whitespace-nowrap">➕ เพิ่มสลาก</div>
+            <div onclick="switchTab('tab-review')" id="btn-review" class="flex-1 p-3 cursor-pointer whitespace-nowrap">🟡 รอตรวจสลิป</div>
+            <div onclick="switchTab('tab-all')" id="btn-all" class="flex-1 p-3 cursor-pointer whitespace-nowrap">📦 สลากทั้งหมด</div>
         </div>
-    </div>
 
-    <!-- Payment & Slip Modal -->
-    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md text-center">
-            <h2 class="text-xl font-bold text-red-600 mb-2">⏱ เหลือเวลา <span id="timer">05:00</span></h2>
-            <p class="mb-4 text-gray-600">กรุณาโอนเงินและแนบสลิปเพื่อยืนยัน</p>
+        <div class="bg-white p-6 rounded-b-lg shadow-md min-h-[400px]">
             
-            <div class="bg-gray-100 p-4 rounded-lg mb-4">
-                <p class="font-bold text-lg">ยอดโอน: <span id="pay-total" class="text-teal-600">0</span> บาท</p>
-                <p class="text-sm mt-1">บัญชี: ธนาคารทดสอบ (012-3-45678-9)</p>
+            <!-- Tab: Add Ticket -->
+            <div id="tab-add">
+                <h3 class="font-bold mb-4">นำเข้าสลากใบใหม่</h3>
+                <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 mb-4 hover:bg-gray-100">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <p class="text-gray-500 font-bold" id="upload-text">📸 แตะเพื่อถ่ายรูป/เลือกรูปสลาก</p>
+                    </div>
+                    <input type="file" id="ticket-img" accept="image/*" class="hidden" onchange="previewImage(event)">
+                </label>
+                <div id="img-preview" class="hidden mb-4 text-center">
+                    <img id="preview-src" class="h-32 mx-auto rounded shadow">
+                    <p class="text-xs text-gray-500 mt-2">บีบอัดรูปภาพแล้ว</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-sm text-gray-600">เลขสลาก (6 หลัก) *</label>
+                        <input type="text" id="ticket-no" class="w-full p-2 border rounded mt-1 outline-none" maxlength="6">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600">ราคา (เว้นว่างได้)</label>
+                        <input type="number" id="ticket-price" class="w-full p-2 border rounded mt-1 outline-none" placeholder="เช่น 80">
+                    </div>
+                </div>
+                <button onclick="saveTicket()" id="btn-save" class="w-full bg-slate-800 text-white py-3 rounded font-bold">บันทึกสลากลงแผง</button>
             </div>
 
-            <label class="block w-full bg-blue-100 text-blue-700 p-3 rounded cursor-pointer font-bold mb-4 border border-blue-300">
-                📸 อัปโหลดสลิปโอนเงิน
-                <input type="file" id="slip-file" accept="image/*" class="hidden" onchange="handleSlipSelect(event)">
-            </label>
-            <p id="slip-name" class="text-sm text-green-600 mb-4 hidden">อัปโหลดสลิปแล้ว!</p>
+            <!-- Tab: Review -->
+            <div id="tab-review" class="hidden">
+                <h3 class="font-bold mb-4">รายการรอตรวจสอบโอนเงิน</h3>
+                <div id="review-list" class="space-y-4"></div>
+            </div>
 
-            <button onclick="submitPayment()" id="btn-submit-slip" class="w-full bg-teal-600 text-white py-3 rounded-lg font-bold text-lg shadow-md opacity-50 pointer-events-none">แจ้งโอนเงิน</button>
+            <!-- Tab: All Tickets -->
+            <div id="tab-all" class="hidden">
+                <h3 class="font-bold mb-4">สถานะสลากทั้งหมด</h3>
+                <div id="all-list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal: แก้ไขข้อมูลสลาก (เพิ่มใหม่) -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-sm shadow-xl">
+            <h3 class="font-bold text-lg mb-4 text-slate-800">✏️ แก้ไขข้อมูลสลาก</h3>
+            <input type="hidden" id="edit-id">
+            
+            <div class="mb-3">
+                <label class="text-sm text-gray-600 font-bold">เลขสลาก (6 หลัก)</label>
+                <input type="text" id="edit-no" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500" maxlength="6">
+            </div>
+            
+            <div class="mb-3">
+                <label class="text-sm text-gray-600 font-bold">ราคา (บาท) - ลบออกเพื่อซ่อนราคาได้</label>
+                <input type="number" id="edit-price" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500">
+            </div>
+
+            <div class="mb-5">
+                <label class="text-sm text-gray-600 font-bold">สถานะสลาก</label>
+                <select id="edit-status" class="w-full p-2 border rounded mt-1 outline-none focus:border-teal-500">
+                    <option value="AVAILABLE">🟢 ว่าง (พร้อมขาย)</option>
+                    <option value="RESERVED">🟡 กำลังจอง (5 นาที)</option>
+                    <option value="PAYMENT_REVIEW">🟠 แจ้งโอนแล้ว (รอตรวจ)</option>
+                    <option value="SOLD">🔴 ขายแล้ว</option>
+                </select>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="closeEditModal()" class="w-1/3 bg-gray-300 hover:bg-gray-400 py-2 rounded font-bold transition">ยกเลิก</button>
+                <button onclick="submitEdit()" id="btn-submit-edit" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-bold transition">บันทึกการแก้ไข</button>
+            </div>
         </div>
     </div>
 
     <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, writeBatch, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXuj7Pl1JnBn2Y7BtyzkHHQm4MQH-isrM",
@@ -88,15 +124,43 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let allTickets = [];
-        let cart = [];
-        let compressedSlip = null;
-        let countdownTimer;
+        let currentBase64 = null;
 
-        // Image Compression Function
-        window.compressImage = function(file, callback) {
+        // Auth Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+                loadDashboardData();
+            } else {
+                document.getElementById('login-section').classList.remove('hidden');
+                document.getElementById('dashboard-section').classList.add('hidden');
+            }
+        });
+
+        window.login = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("รหัสผิดพลาด: " + err.message));
+        };
+        window.logout = () => signOut(auth);
+
+        window.switchTab = (tabId) => {
+            ['tab-add', 'tab-review', 'tab-all'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['btn-add', 'btn-review', 'btn-all'].forEach(b => {
+                document.getElementById(b).classList.remove('text-teal-600', 'border-b-2', 'border-teal-600');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId.replace('tab', 'btn')).classList.add('text-teal-600', 'border-b-2', 'border-teal-600');
+        };
+
+        // Image Compression (Base64)
+        window.previewImage = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = event => {
@@ -105,194 +169,166 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 600;
-                    let width = img.width;
-                    let height = img.height;
+                    let width = img.width; let height = img.height;
                     if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                    
+                    currentBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('upload-text').classList.add('hidden');
+                    document.getElementById('img-preview').classList.remove('hidden');
+                    document.getElementById('preview-src').src = currentBase64;
                 };
             };
         };
 
-        // Fetch Tickets Real-time
-        onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
-            allTickets = [];
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                if(data.status === 'RESERVED' && (Date.now() - data.reserved_at > 300000)) {
-                    data.status = 'AVAILABLE'; 
-                }
-                allTickets.push({ id: doc.id, ...data });
+        window.saveTicket = async () => {
+            const no = document.getElementById('ticket-no').value;
+            const price = document.getElementById('ticket-price').value;
+            if(!no || !currentBase64) return alert("กรุณาใส่รูปและเลขให้ครบ");
+            
+            document.getElementById('btn-save').innerText = "กำลังบันทึก...";
+            await addDoc(collection(db, "lottery_tickets"), {
+                ticket_no: no,
+                price: price,
+                image_base64: currentBase64,
+                status: 'AVAILABLE',
+                created_at: Date.now()
             });
-            renderTickets();
-        });
-
-        function renderTickets() {
-            const grid = document.getElementById('ticket-grid');
-            const keyword = document.getElementById('searchInput').value;
-            grid.innerHTML = '';
             
-            const availableTickets = allTickets.filter(t => t.status === 'AVAILABLE' && t.ticket_no.includes(keyword));
-            
-            if(availableTickets.length === 0) {
-                grid.innerHTML = '<p class="col-span-2 text-center text-gray-500 py-5">ไม่มีสลากว่างที่ค้นหา</p>';
-                return;
-            }
-
-            availableTickets.forEach(ticket => {
-                const isSelected = cart.find(item => item.id === ticket.id);
-                const priceTag = ticket.price ? `<p class="font-bold text-teal-600 mt-1">${ticket.price} บาท</p>` : '';
-                
-                grid.innerHTML += `
-                    <div class="bg-white rounded-lg shadow-sm border ${isSelected ? 'border-4 border-teal-500' : 'border-gray-200'} overflow-hidden relative cursor-pointer flex flex-col" onclick="toggleCart('${ticket.id}')">
-                        ${isSelected ? '<div class="absolute top-0 right-0 bg-teal-500 text-white text-xs px-2 py-1 rounded-bl-lg font-bold z-10 pointer-events-none">เลือกแล้ว</div>' : ''}
-                        
-                        <!-- โซนคลิกเพื่อดูรูปขยาย (ใส่ StopPropagation เพื่อไม่ให้ไปโดนคำสั่งเลือกตะกร้า) -->
-                        <img src="${ticket.image_base64}" class="w-full h-24 object-cover relative z-20" alt="หวย" onclick="openImageModal(event, '${ticket.image_base64}')">
-                        
-                        <!-- โซนคลิกเพื่อเลือกเข้าตะกร้า -->
-                        <div class="p-2 text-center flex-1">
-                            <p class="font-bold tracking-widest text-lg">${ticket.ticket_no}</p>
-                            ${priceTag}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        document.getElementById('searchInput').addEventListener('input', renderTickets);
-
-        // ฟังก์ชันเปิด-ปิด รูปขยาย
-        window.openImageModal = function(event, src) {
-            event.stopPropagation(); // สำคัญมาก: ป้องกันไม่ให้การคลิกทะลุไปถึงฟังก์ชัน toggleCart
-            document.getElementById('modal-image').src = src;
-            document.getElementById('image-modal').classList.remove('hidden');
+            alert("เพิ่มสลากสำเร็จ!");
+            document.getElementById('ticket-no').value = '';
+            document.getElementById('ticket-price').value = '';
+            document.getElementById('img-preview').classList.add('hidden');
+            document.getElementById('upload-text').classList.remove('hidden');
+            currentBase64 = null;
+            document.getElementById('btn-save').innerText = "บันทึกสลากลงแผง";
         };
 
-        window.closeImageModal = function() {
-            document.getElementById('image-modal').classList.add('hidden');
-            document.getElementById('modal-image').src = '';
-        };
-
-        // ฟังก์ชันระบบตะกร้า
-        window.toggleCart = function(id) {
-            const ticket = allTickets.find(t => t.id === id);
-            const index = cart.findIndex(t => t.id === id);
-            if (index > -1) cart.splice(index, 1);
-            else cart.push(ticket);
-            
-            updateCartUI();
-            renderTickets();
-        };
-
-        function updateCartUI() {
-            const cartBar = document.getElementById('cart-bar');
-            if (cart.length > 0) {
-                cartBar.classList.remove('hidden');
-                document.getElementById('cart-count').innerText = cart.length;
-                const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-                document.getElementById('cart-total').innerText = total;
-            } else {
-                cartBar.classList.add('hidden');
-            }
-        }
-
-        window.openCheckout = () => document.getElementById('checkout-modal').classList.remove('hidden');
-        window.closeModal = (id) => document.getElementById('checkout-modal').classList.add('hidden');
-
-        // Book Tickets (Transaction)
-        window.confirmOrder = async function() {
-            const name = document.getElementById('buyer-name').value;
-            const phone = document.getElementById('buyer-phone').value;
-            if(!name || !phone) return alert("กรุณากรอกชื่อและเบอร์โทรให้ครบถ้วน");
-
-            document.getElementById('btn-confirm').innerText = "กำลังล็อคสลาก...";
-            try {
-                const batch = writeBatch(db);
-                for (let item of cart) {
-                    const docSnap = await getDoc(doc(db, "lottery_tickets", item.id));
-                    const dbData = docSnap.data();
-                    if(dbData.status !== 'AVAILABLE' && !(dbData.status === 'RESERVED' && (Date.now() - dbData.reserved_at > 300000))) {
-                        throw new Error(`ใบเลข ${item.ticket_no} ถูกซื้อไปแล้ว กรุณาเลือกใหม่`);
+        function loadDashboardData() {
+            // Load Review Orders
+            onSnapshot(collection(db, "lottery_orders"), (snapshot) => {
+                const list = document.getElementById('review-list');
+                list.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const order = docSnap.data();
+                    if(order.status === 'PAYMENT_REVIEW') {
+                        let tList = order.tickets.map(t => t.no).join(', ');
+                        list.innerHTML += `
+                            <div class="border rounded p-4 flex flex-col md:flex-row gap-4 bg-white shadow-sm">
+                                <img src="${order.slip_base64}" class="w-32 object-contain rounded cursor-pointer border" onclick="window.open('${order.slip_base64}')">
+                                <div class="flex-1">
+                                    <p><b>ลูกค้า:</b> ${order.buyer_name} (${order.buyer_phone})</p>
+                                    <p><b>ยอดโอน:</b> <span class="text-teal-600 font-bold">${order.total_price} บาท</span></p>
+                                    <p class="text-sm text-gray-500">เลข: ${tList}</p>
+                                    <div class="mt-3 flex gap-2">
+                                        <button onclick="approveOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-green-600 text-white px-4 py-1 rounded">✅ รับเงินแล้ว (ขาย)</button>
+                                        <button onclick="rejectOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-red-500 text-white px-4 py-1 rounded">❌ ปฏิเสธ (ดึงกลับ)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
-                    batch.update(doc(db, "lottery_tickets", item.id), { 
-                        status: 'RESERVED', 
-                        reserved_at: Date.now(),
-                        buyer_name: name
-                    });
-                }
-                await batch.commit(); 
-
-                document.getElementById('checkout-modal').classList.add('hidden');
-                document.getElementById('payment-modal').classList.remove('hidden');
-                
-                const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-                document.getElementById('pay-total').innerText = total;
-                startTimer(300); 
-
-            } catch (e) {
-                alert(e.message);
-                document.getElementById('btn-confirm').innerText = "ยืนยันคำสั่งซื้อ";
-            }
-        };
-
-        window.handleSlipSelect = function(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            compressImage(file, (base64) => {
-                compressedSlip = base64;
-                document.getElementById('slip-name').classList.remove('hidden');
-                document.getElementById('btn-submit-slip').classList.remove('opacity-50', 'pointer-events-none');
+                });
             });
+
+            // Load All Tickets
+            onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
+                const list = document.getElementById('all-list');
+                list.innerHTML = '';
+                
+                // แปลงข้อมูลแล้วเรียงจากใหม่ไปเก่า
+                let ticketsArray = [];
+                snapshot.forEach(docSnap => {
+                    ticketsArray.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                ticketsArray.sort((a, b) => b.created_at - a.created_at);
+
+                ticketsArray.forEach(t => {
+                    // จัดการสถานะและป้ายสี
+                    let currentStatus = t.status;
+                    if(t.status === 'RESERVED' && (Date.now() - t.reserved_at > 300000)) currentStatus = 'AVAILABLE';
+                    
+                    let badge = currentStatus === 'AVAILABLE' ? '🟢 ว่าง' : (currentStatus === 'RESERVED' ? '🟡 จอง' : (currentStatus === 'SOLD' ? '🔴 ขายแล้ว' : '🟠 รอตรวจ'));
+
+                    list.innerHTML += `
+                        <div class="border rounded p-2 text-center text-sm relative bg-white shadow-sm">
+                            <!-- ปุ่มลบ (X สีแดง) มุมขวา -->
+                            <button onclick="deleteT('${t.id}')" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">X</button>
+                            
+                            <!-- ปุ่มแก้ไข (✏️ สีฟ้า) มุมซ้าย (เพิ่มใหม่) -->
+                            <button onclick="openEditModal('${t.id}', '${t.ticket_no}', '${t.price || ''}', '${currentStatus}')" class="absolute top-1 left-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">✏️</button>
+                            
+                            <img src="${t.image_base64}" class="h-16 mx-auto object-cover mb-2 border rounded">
+                            <p class="font-bold text-lg">${t.ticket_no}</p>
+                            <p class="text-[11px] text-gray-500 mb-1">${t.price ? t.price+' บาท' : 'ไม่มีราคา'}</p>
+                            <p class="${currentStatus === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'} font-bold bg-gray-50 py-1 rounded">${badge}</p>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // ================= ระบบ Edit สลาก =================
+        window.openEditModal = (id, no, price, status) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-no').value = no;
+            document.getElementById('edit-price').value = price;
+            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-modal').classList.remove('hidden');
         };
 
-        window.submitPayment = async function() {
-            if(!compressedSlip) return;
-            document.getElementById('btn-submit-slip').innerText = "กำลังส่งข้อมูล...";
-            const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+        window.closeEditModal = () => {
+            document.getElementById('edit-modal').classList.add('hidden');
+        };
+
+        window.submitEdit = async () => {
+            const id = document.getElementById('edit-id').value;
+            const no = document.getElementById('edit-no').value;
+            const price = document.getElementById('edit-price').value;
+            const status = document.getElementById('edit-status').value;
             
+            if(!no) return alert("กรุณาใส่เลขสลาก");
+            
+            document.getElementById('btn-submit-edit').innerText = "กำลังบันทึก...";
             try {
-                await addDoc(collection(db, "lottery_orders"), {
-                    buyer_name: document.getElementById('buyer-name').value,
-                    buyer_phone: document.getElementById('buyer-phone').value,
-                    total_price: total,
-                    slip_base64: compressedSlip,
-                    tickets: cart.map(t => ({ id: t.id, no: t.ticket_no })),
-                    status: 'PAYMENT_REVIEW',
-                    created_at: serverTimestamp()
+                // คำสั่ง updateDoc จะแก้เฉพาะฟิลด์ที่ส่งไป ไม่กระทบรูปภาพหรือข้อมูลเดิม
+                await updateDoc(doc(db, "lottery_tickets", id), {
+                    ticket_no: no,
+                    price: price ? price : null,
+                    status: status
                 });
-
-                const batch = writeBatch(db);
-                cart.forEach(item => {
-                    batch.update(doc(db, "lottery_tickets", item.id), { status: 'PAYMENT_REVIEW' });
-                });
-                await batch.commit();
-
-                alert("แจ้งโอนเงินสำเร็จ! กรุณารอแอดมินตรวจสอบ");
-                location.reload(); 
-            } catch(e) {
-                console.error(e);
-                alert("เกิดข้อผิดพลาดในการแจ้งโอน");
+                closeEditModal();
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการบันทึก: " + e.message);
+            } finally {
+                document.getElementById('btn-submit-edit').innerText = "บันทึกการแก้ไข";
             }
         };
+        // ===============================================
 
-        function startTimer(duration) {
-            let timer = duration, minutes, seconds;
-            countdownTimer = setInterval(() => {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-                document.getElementById('timer').textContent = minutes + ":" + seconds;
-                if (--timer < 0) {
-                    clearInterval(countdownTimer);
-                    alert("หมดเวลาทำรายการ สลากถูกนำกลับขึ้นแผง");
-                    location.reload();
-                }
-            }, 1000);
-        }
+        window.approveOrder = async (orderId, ticketsJson) => {
+            if(!confirm("ยืนยันว่าได้รับยอดเงินแล้วใช่หรือไม่?")) return;
+            const batch = writeBatch(db);
+            const tickets = JSON.parse(ticketsJson);
+            batch.update(doc(db, "lottery_orders", orderId), { status: 'COMPLETED' });
+            tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'SOLD' }));
+            await batch.commit();
+        };
+
+        window.rejectOrder = async (orderId, ticketsJson) => {
+            if(!confirm("ปฏิเสธสลิปนี้ และดึงสลากกลับขึ้นแผง?")) return;
+            const batch = writeBatch(db);
+            const tickets = JSON.parse(ticketsJson);
+            batch.update(doc(db, "lottery_orders", orderId), { status: 'REJECTED' });
+            tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'AVAILABLE' }));
+            await batch.commit();
+        };
+
+        window.deleteT = async (id) => {
+            if(confirm("ลบสลากใบนี้ออกจากแผงถาวร?")) await deleteDoc(doc(db, "lottery_tickets", id));
+        };
     </script>
 </body>
 </html>
