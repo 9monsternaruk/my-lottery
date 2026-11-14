@@ -229,13 +229,11 @@
             
             document.getElementById('btn-save-qr').innerText = "กำลังบันทึก...";
             
-            // ข้อมูลที่จะอัปเดต
             const updateData = {
                 promptpay_text: promptpayText,
                 updated_at: Date.now()
             };
             
-            // ถ้ามีการเลือกรูปใหม่ ให้รวมเข้าไปด้วย
             if(qrBase64) {
                 updateData.qr_base64 = qrBase64;
             }
@@ -306,16 +304,21 @@
                     const order = docSnap.data();
                     if(order.status === 'PAYMENT_REVIEW') {
                         let tList = order.tickets.map(t => t.no).join(', ');
+                        
+                        // 🛠️ แก้ไข: ทำการเข้ารหัสข้อมูลก่อนส่งเข้าไปในปุ่ม เพื่อไม่ให้เครื่องหมายคำพูด (") ทำให้ HTML พัง
+                        let encodedTickets = encodeURIComponent(JSON.stringify(order.tickets));
+                        
                         list.innerHTML += `
-                            <div class="border rounded p-4 flex flex-col md:flex-row gap-4 bg-white shadow-sm">
-                                <img src="${order.slip_base64}" class="w-32 object-contain rounded cursor-pointer border" onclick="window.open('${order.slip_base64}')">
+                            <div class="border rounded-xl p-4 flex flex-col md:flex-row gap-4 bg-white shadow-sm">
+                                <img src="${order.slip_base64}" class="w-full md:w-40 object-contain rounded-lg cursor-pointer border hover:opacity-90" onclick="window.open('${order.slip_base64}')">
                                 <div class="flex-1">
-                                    <p><b>ลูกค้า:</b> ${order.buyer_name} (${order.buyer_phone})</p>
-                                    <p><b>ยอดโอน:</b> <span class="text-teal-600 font-bold">${order.total_price} บาท</span></p>
-                                    <p class="text-sm text-gray-500">เลข: ${tList}</p>
-                                    <div class="mt-3 flex gap-2">
-                                        <button onclick="approveOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-green-600 text-white px-4 py-1 rounded">✅ รับเงินแล้ว (ขาย)</button>
-                                        <button onclick="rejectOrder('${docSnap.id}', '${JSON.stringify(order.tickets)}')" class="bg-red-500 text-white px-4 py-1 rounded">❌ ปฏิเสธ (ดึงกลับ)</button>
+                                    <p class="text-sm md:text-base"><b>ลูกค้า:</b> ${order.buyer_name} (${order.buyer_phone})</p>
+                                    <p class="text-sm md:text-base"><b>ยอดโอน:</b> <span class="text-teal-600 font-bold text-lg">${order.total_price} บาท</span></p>
+                                    <p class="text-xs text-gray-500 mt-1 bg-gray-50 p-2 rounded">เลข: ${tList}</p>
+                                    
+                                    <div class="mt-4 flex gap-2 w-full">
+                                        <button onclick="approveOrder('${docSnap.id}', '${encodedTickets}')" class="flex-1 bg-green-600 text-white px-2 py-3 rounded-lg font-bold shadow-md hover:bg-green-700">✅ รับเงินแล้ว (ขาย)</button>
+                                        <button onclick="rejectOrder('${docSnap.id}', '${encodedTickets}')" class="flex-1 bg-red-500 text-white px-2 py-3 rounded-lg font-bold shadow-md hover:bg-red-600">❌ ปฏิเสธ (ดึงกลับ)</button>
                                     </div>
                                 </div>
                             </div>
@@ -341,11 +344,11 @@
                     let badge = currentStatus === 'AVAILABLE' ? '🟢 ว่าง' : (currentStatus === 'RESERVED' ? '🟡 จอง' : (currentStatus === 'SOLD' ? '🔴 ขายแล้ว' : '🟠 รอตรวจ'));
 
                     list.innerHTML += `
-                        <div class="border rounded p-2 text-center text-sm relative bg-white shadow-sm">
-                            <button onclick="deleteT('${t.id}')" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">X</button>
-                            <button onclick="openEditModal('${t.id}', '${t.ticket_no}', '${t.price || ''}', '${currentStatus}')" class="absolute top-1 left-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow">✏️</button>
+                        <div class="border rounded-xl p-2 text-center text-sm relative bg-white shadow-sm">
+                            <button onclick="deleteT('${t.id}')" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-md">X</button>
+                            <button onclick="openEditModal('${t.id}', '${t.ticket_no}', '${t.price || ''}', '${currentStatus}')" class="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-md">✏️</button>
                             
-                            <img src="${t.image_base64}" class="h-16 mx-auto object-cover mb-2 border rounded">
+                            <img src="${t.image_base64}" class="h-20 md:h-16 mx-auto object-cover mb-2 mt-2 border rounded">
                             <p class="font-bold text-lg">${t.ticket_no}</p>
                             <p class="text-[11px] text-gray-500 mb-1">${t.price ? t.price+' บาท' : 'ไม่มีราคา'}</p>
                             <p class="${currentStatus === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'} font-bold bg-gray-50 py-1 rounded">${badge}</p>
@@ -390,19 +393,25 @@
             }
         };
 
-        window.approveOrder = async (orderId, ticketsJson) => {
+        window.approveOrder = async (orderId, encodedTickets) => {
             if(!confirm("ยืนยันว่าได้รับยอดเงินแล้วใช่หรือไม่?")) return;
             const batch = writeBatch(db);
-            const tickets = JSON.parse(ticketsJson);
+            
+            // 🛠️ ถอดรหัสข้อมูลสลากกลับมาใช้งาน
+            const tickets = JSON.parse(decodeURIComponent(encodedTickets));
+            
             batch.update(doc(db, "lottery_orders", orderId), { status: 'COMPLETED' });
             tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'SOLD' }));
             await batch.commit();
         };
 
-        window.rejectOrder = async (orderId, ticketsJson) => {
+        window.rejectOrder = async (orderId, encodedTickets) => {
             if(!confirm("ปฏิเสธสลิปนี้ และดึงสลากกลับขึ้นแผง?")) return;
             const batch = writeBatch(db);
-            const tickets = JSON.parse(ticketsJson);
+            
+            // 🛠️ ถอดรหัสข้อมูลสลากกลับมาใช้งาน
+            const tickets = JSON.parse(decodeURIComponent(encodedTickets));
+            
             batch.update(doc(db, "lottery_orders", orderId), { status: 'REJECTED' });
             tickets.forEach(t => batch.update(doc(db, "lottery_tickets", t.id), { status: 'AVAILABLE' }));
             await batch.commit();
