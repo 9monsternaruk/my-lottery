@@ -10,7 +10,7 @@
 </head>
 <body class="pb-24">
     <!-- Header -->
-    <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-50">
+    <header class="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-40">
         <h1 class="text-xl font-bold text-center">แผงหวยออนไลน์ พี่ธง</h1>
         <div class="mt-3">
             <input type="text" id="searchInput" placeholder="🔍 ค้นหาเลขสลาก (เช่น 123)" class="w-full p-2 rounded text-black outline-none">
@@ -25,12 +25,18 @@
     </div>
 
     <!-- Cart (Sticky Bottom) -->
-    <div id="cart-bar" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex justify-between items-center hidden z-40">
+    <div id="cart-bar" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex justify-between items-center hidden z-30">
         <div>
             <p class="text-sm text-gray-600">เลือกแล้ว <span id="cart-count" class="font-bold text-teal-600">0</span> ใบ</p>
             <p class="text-lg font-bold">รวม <span id="cart-total">0</span> บาท</p>
         </div>
         <button onclick="openCheckout()" class="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold text-lg shadow-md">แจ้งซื้อเลย</button>
+    </div>
+
+    <!-- Image Modal (ป๊อปอัปดูรูปเต็มใบ) -->
+    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-[60] cursor-pointer" onclick="closeImageModal()">
+        <span class="absolute top-4 right-4 text-white text-4xl font-bold">&times;</span>
+        <img id="modal-image" class="max-w-[95%] max-h-[90vh] object-contain rounded-lg shadow-2xl">
     </div>
 
     <!-- Checkout Modal -->
@@ -89,7 +95,7 @@
         let compressedSlip = null;
         let countdownTimer;
 
-        // Image Compression Function (Base64)
+        // Image Compression Function
         window.compressImage = function(file, callback) {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -115,7 +121,6 @@
             allTickets = [];
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                // Check if RESERVED but expired (5 mins = 300000 ms)
                 if(data.status === 'RESERVED' && (Date.now() - data.reserved_at > 300000)) {
                     data.status = 'AVAILABLE'; 
                 }
@@ -139,11 +144,16 @@
             availableTickets.forEach(ticket => {
                 const isSelected = cart.find(item => item.id === ticket.id);
                 const priceTag = ticket.price ? `<p class="font-bold text-teal-600 mt-1">${ticket.price} บาท</p>` : '';
+                
                 grid.innerHTML += `
-                    <div class="bg-white rounded-lg shadow-sm border ${isSelected ? 'border-4 border-teal-500' : 'border-gray-200'} overflow-hidden relative cursor-pointer" onclick="toggleCart('${ticket.id}')">
-                        ${isSelected ? '<div class="absolute top-0 right-0 bg-teal-500 text-white text-xs px-2 py-1 rounded-bl-lg font-bold">เลือกแล้ว</div>' : ''}
-                        <img src="${ticket.image_base64}" class="w-full h-24 object-cover" alt="หวย">
-                        <div class="p-2 text-center">
+                    <div class="bg-white rounded-lg shadow-sm border ${isSelected ? 'border-4 border-teal-500' : 'border-gray-200'} overflow-hidden relative cursor-pointer flex flex-col" onclick="toggleCart('${ticket.id}')">
+                        ${isSelected ? '<div class="absolute top-0 right-0 bg-teal-500 text-white text-xs px-2 py-1 rounded-bl-lg font-bold z-10 pointer-events-none">เลือกแล้ว</div>' : ''}
+                        
+                        <!-- โซนคลิกเพื่อดูรูปขยาย (ใส่ StopPropagation เพื่อไม่ให้ไปโดนคำสั่งเลือกตะกร้า) -->
+                        <img src="${ticket.image_base64}" class="w-full h-24 object-cover relative z-20" alt="หวย" onclick="openImageModal(event, '${ticket.image_base64}')">
+                        
+                        <!-- โซนคลิกเพื่อเลือกเข้าตะกร้า -->
+                        <div class="p-2 text-center flex-1">
                             <p class="font-bold tracking-widest text-lg">${ticket.ticket_no}</p>
                             ${priceTag}
                         </div>
@@ -154,6 +164,19 @@
 
         document.getElementById('searchInput').addEventListener('input', renderTickets);
 
+        // ฟังก์ชันเปิด-ปิด รูปขยาย
+        window.openImageModal = function(event, src) {
+            event.stopPropagation(); // สำคัญมาก: ป้องกันไม่ให้การคลิกทะลุไปถึงฟังก์ชัน toggleCart
+            document.getElementById('modal-image').src = src;
+            document.getElementById('image-modal').classList.remove('hidden');
+        };
+
+        window.closeImageModal = function() {
+            document.getElementById('image-modal').classList.add('hidden');
+            document.getElementById('modal-image').src = '';
+        };
+
+        // ฟังก์ชันระบบตะกร้า
         window.toggleCart = function(id) {
             const ticket = allTickets.find(t => t.id === id);
             const index = cart.findIndex(t => t.id === id);
@@ -179,7 +202,7 @@
         window.openCheckout = () => document.getElementById('checkout-modal').classList.remove('hidden');
         window.closeModal = (id) => document.getElementById('checkout-modal').classList.add('hidden');
 
-        // Book Tickets (Transaction Simulation via Batch)
+        // Book Tickets (Transaction)
         window.confirmOrder = async function() {
             const name = document.getElementById('buyer-name').value;
             const phone = document.getElementById('buyer-phone').value;
@@ -188,7 +211,6 @@
             document.getElementById('btn-confirm').innerText = "กำลังล็อคสลาก...";
             try {
                 const batch = writeBatch(db);
-                // Pre-check
                 for (let item of cart) {
                     const docSnap = await getDoc(doc(db, "lottery_tickets", item.id));
                     const dbData = docSnap.data();
@@ -201,14 +223,14 @@
                         buyer_name: name
                     });
                 }
-                await batch.commit(); // ล็อคสำเร็จ 5 นาที
+                await batch.commit(); 
 
                 document.getElementById('checkout-modal').classList.add('hidden');
                 document.getElementById('payment-modal').classList.remove('hidden');
                 
                 const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
                 document.getElementById('pay-total').innerText = total;
-                startTimer(300); // 5 mins
+                startTimer(300); 
 
             } catch (e) {
                 alert(e.message);
@@ -229,11 +251,9 @@
         window.submitPayment = async function() {
             if(!compressedSlip) return;
             document.getElementById('btn-submit-slip').innerText = "กำลังส่งข้อมูล...";
-            
             const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
             
             try {
-                // สร้างออเดอร์แจ้งโอน
                 await addDoc(collection(db, "lottery_orders"), {
                     buyer_name: document.getElementById('buyer-name').value,
                     buyer_phone: document.getElementById('buyer-phone').value,
@@ -244,7 +264,6 @@
                     created_at: serverTimestamp()
                 });
 
-                // เปลี่ยนสถานะสลากเป็น รอตรวจสอบ
                 const batch = writeBatch(db);
                 cart.forEach(item => {
                     batch.update(doc(db, "lottery_tickets", item.id), { status: 'PAYMENT_REVIEW' });
@@ -252,7 +271,7 @@
                 await batch.commit();
 
                 alert("แจ้งโอนเงินสำเร็จ! กรุณารอแอดมินตรวจสอบ");
-                location.reload(); // รีเฟรชหน้าจบการขาย
+                location.reload(); 
             } catch(e) {
                 console.error(e);
                 alert("เกิดข้อผิดพลาดในการแจ้งโอน");
