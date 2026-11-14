@@ -38,15 +38,28 @@
             <!-- Tab: Add Ticket -->
             <div id="tab-add">
                 <h3 class="font-bold mb-4 text-slate-800">นำเข้าสลากใบใหม่</h3>
-                <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 mb-4 hover:bg-gray-100 transition">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <p class="text-gray-500 font-bold" id="upload-text">📸 แตะเพื่อถ่ายรูป/เลือกรูปสลาก</p>
-                    </div>
-                    <input type="file" id="ticket-img" accept="image/*" class="hidden" onchange="previewImage(event)">
-                </label>
-                <div id="img-preview" class="hidden mb-4 text-center">
-                    <img id="preview-src" class="h-32 mx-auto rounded shadow object-cover">
-                    <p class="text-xs text-gray-500 mt-2">บีบอัดรูปภาพแล้ว</p>
+                
+                <!-- 🛠️ แก้ไข: แยกปุ่มกล้อง และ ปุ่มเลือกรูปให้ชัดเจน รองรับแอนดรอยด์ 100% -->
+                <div id="upload-container" class="flex gap-3 mb-4 w-full h-28">
+                    <label class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-teal-400 rounded-xl cursor-pointer bg-teal-50 hover:bg-teal-100 transition shadow-sm">
+                        <span class="text-3xl mb-1">📸</span>
+                        <span class="text-teal-700 font-bold text-sm">เปิดกล้องถ่าย</span>
+                        <!-- ใช้ capture="environment" เพื่อบังคับเปิดกล้อง -->
+                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="previewImage(event)">
+                    </label>
+                    
+                    <label class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-blue-400 rounded-xl cursor-pointer bg-blue-50 hover:bg-blue-100 transition shadow-sm">
+                        <span class="text-3xl mb-1">🖼️</span>
+                        <span class="text-blue-700 font-bold text-sm">เลือกจากเครื่อง</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImage(event)">
+                    </label>
+                </div>
+
+                <!-- 🛠️ เพิ่มปุ่ม (X) สำหรับกดยกเลิกรูป เพื่อถ่ายใหม่ได้ทันที -->
+                <div id="img-preview" class="hidden mb-4 text-center bg-gray-50 border border-gray-200 rounded-xl p-4 relative shadow-inner">
+                    <button onclick="resetImage()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 font-bold shadow-md hover:bg-red-600 flex items-center justify-center text-xl leading-none">&times;</button>
+                    <img id="preview-src" class="h-32 mx-auto rounded shadow-sm object-cover border border-gray-300">
+                    <p class="text-xs text-green-600 mt-2 font-bold">📸 ภาพพร้อมบันทึกลงแผงแล้ว</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -137,7 +150,7 @@
         </div>
     </div>
 
-    <!-- Modal: ดูรูปสลิปและรูปหวย (ตัวใหม่) -->
+    <!-- Modal: ดูรูปสลิปและรูปหวย -->
     <div id="view-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-[100] p-4 backdrop-blur-sm">
         <div class="relative w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-4 border-b">
@@ -145,7 +158,6 @@
                 <button onclick="closeViewModal()" class="text-3xl text-gray-400 hover:text-red-600 leading-none font-bold">&times;</button>
             </div>
             <div id="view-modal-content" class="p-4 overflow-y-auto flex flex-col gap-4 bg-gray-50">
-                <!-- เนื้อหารูปภาพจะมาแสดงตรงนี้ -->
             </div>
         </div>
     </div>
@@ -171,8 +183,6 @@
 
         let currentBase64 = null;
         let qrBase64 = null;
-        
-        // ตัวแปรเก็บข้อมูลทั้งหมดเพื่อใช้ใน Modal ดูสลิปและหวย
         let allOrdersData = []; 
         let allCompletedOrders = []; 
         let allTicketsData = [];
@@ -204,7 +214,6 @@
             document.getElementById(tabId.replace('tab', 'btn')).classList.add('text-teal-600', 'border-b-2', 'border-teal-600');
         };
 
-        // QR Settings
         onSnapshot(doc(db, "store_settings", "payment_info"), (docSnap) => {
             if(docSnap.exists()) {
                 const data = docSnap.data();
@@ -247,6 +256,14 @@
             document.getElementById('btn-save-qr').innerText = "บันทึกการตั้งค่าทั้งหมด";
         };
 
+        // 🛠️ ฟังก์ชันสำหรับล้างรูปภาพที่เลือก เพื่อให้ปุ่มถ่ายใหม่โชว์
+        window.resetImage = () => {
+            currentBase64 = null;
+            document.getElementById('img-preview').classList.add('hidden');
+            document.getElementById('upload-container').classList.remove('hidden');
+            document.getElementById('preview-src').src = '';
+        };
+
         window.previewImage = (e) => {
             const file = e.target.files[0];
             if(!file) return;
@@ -259,9 +276,11 @@
                     if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                     currentBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('upload-text').classList.add('hidden');
+                    
+                    document.getElementById('upload-container').classList.add('hidden');
                     document.getElementById('img-preview').classList.remove('hidden');
                     document.getElementById('preview-src').src = currentBase64;
+                    e.target.value = ''; // เคลียร์ input เผื่อต้องการเลือกไฟล์เดิมซ้ำ
                 };
             };
         };
@@ -274,12 +293,15 @@
             await addDoc(collection(db, "lottery_tickets"), { ticket_no: no, price: price, image_base64: currentBase64, status: 'AVAILABLE', created_at: Date.now() });
             alert("เพิ่มสลากสำเร็จ!");
             document.getElementById('ticket-no').value = ''; document.getElementById('ticket-price').value = '';
-            document.getElementById('img-preview').classList.add('hidden'); document.getElementById('upload-text').classList.remove('hidden');
-            currentBase64 = null; document.getElementById('btn-save').innerText = "บันทึกสลากลงแผง";
+            
+            // รีเซ็ตการแสดงผลกลับเป็น 2 ปุ่มเหมือนเดิม
+            document.getElementById('img-preview').classList.add('hidden'); 
+            document.getElementById('upload-container').classList.remove('hidden');
+            currentBase64 = null; 
+            document.getElementById('btn-save').innerText = "บันทึกสลากลงแผง";
         };
 
         function loadDashboardData() {
-            // Load Orders
             onSnapshot(collection(db, "lottery_orders"), (snapshot) => {
                 const reviewList = document.getElementById('review-list');
                 reviewList.innerHTML = '';
@@ -289,7 +311,7 @@
                 snapshot.forEach(docSnap => {
                     const order = docSnap.data();
                     order.id = docSnap.id;
-                    allOrdersData.push(order); // เก็บทุกบิลไว้เรียกดูรูป
+                    allOrdersData.push(order); 
                     
                     if(order.status === 'PAYMENT_REVIEW') {
                         let tList = order.tickets.map(t => t.no).join(', ');
@@ -314,27 +336,21 @@
                         allCompletedOrders.push(order);
                     }
                 });
-                
                 allCompletedOrders.sort((a, b) => b.created_at - a.created_at);
                 renderHistory(); 
             });
 
-            // Load Tickets
             onSnapshot(collection(db, "lottery_tickets"), (snapshot) => {
                 const inventoryList = document.getElementById('inventory-list');
                 inventoryList.innerHTML = '';
-                
                 let ticketsArray = [];
-                snapshot.forEach(docSnap => {
-                    ticketsArray.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                allTicketsData = ticketsArray; // เก็บรูปหวยทั้งหมดไว้เรียกดู
+                snapshot.forEach(docSnap => { ticketsArray.push({ id: docSnap.id, ...docSnap.data() }); });
+                allTicketsData = ticketsArray;
                 ticketsArray.sort((a, b) => b.created_at - a.created_at);
 
                 ticketsArray.forEach(t => {
                     let currentStatus = t.status;
                     if(t.status === 'RESERVED' && (Date.now() - t.reserved_at > 300000)) currentStatus = 'AVAILABLE';
-                    
                     if(currentStatus === 'SOLD') return; 
 
                     let badge = currentStatus === 'AVAILABLE' ? '🟢 ว่าง' : (currentStatus === 'RESERVED' ? '🟡 จอง' : '🟠 รอตรวจ');
@@ -343,7 +359,6 @@
                         <div class="border rounded-xl p-2 text-center text-sm relative bg-white shadow-sm border-gray-200">
                             <button onclick="deleteT('${t.id}')" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-md">X</button>
                             <button onclick="openEditModal('${t.id}', '${t.ticket_no}', '${t.price || ''}', '${currentStatus}')" class="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-md">✏️</button>
-                            
                             <img src="${t.image_base64}" class="h-20 md:h-16 mx-auto object-cover mb-2 mt-2 border rounded">
                             <p class="font-bold text-lg">${t.ticket_no}</p>
                             <p class="text-[11px] text-gray-500 mb-1">${t.price ? t.price+' บาท' : 'ไม่มีราคา'}</p>
@@ -387,8 +402,6 @@
                             <p class="text-sm text-gray-600 mt-1">เลขหวย: <span class="font-bold text-slate-700">${tList}</span></p>
                             <p class="text-sm text-gray-600">ยอดเงินที่รับ: <span class="font-bold text-green-600">${order.total_price} บาท</span></p>
                         </div>
-                        
-                        <!-- 🛠️ เพิ่มปุ่ม 'ดูหวย' ตามสั่ง -->
                         <div class="grid grid-cols-3 gap-2 w-full md:w-auto mt-2 md:mt-0">
                             <button onclick="viewSlip('${order.id}')" class="text-xs md:text-sm bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg font-bold hover:bg-blue-100">🔍 ดูสลิป</button>
                             <button onclick="viewBoughtTickets('${encodedTickets}')" class="text-xs md:text-sm bg-teal-50 text-teal-600 border border-teal-200 py-2 rounded-lg font-bold hover:bg-teal-100">🎟️ ดูหวย</button>
@@ -399,7 +412,6 @@
             });
         };
 
-        // ================= ฟังก์ชัน Modal ดูรูปภาพ (สลิป / หวย) =================
         window.viewSlip = (orderId) => {
             const order = allOrdersData.find(o => o.id === orderId);
             if(!order) return;
@@ -428,11 +440,9 @@
 
         window.closeViewModal = () => {
             document.getElementById('view-modal').classList.add('hidden');
-            document.getElementById('view-modal-content').innerHTML = ''; // ล้างข้อมูลเก่า
+            document.getElementById('view-modal-content').innerHTML = ''; 
         };
-        // ====================================================================
 
-        // Edit Modal
         window.openEditModal = (id, no, price, status) => {
             document.getElementById('edit-id').value = id; document.getElementById('edit-no').value = no;
             document.getElementById('edit-price').value = price; document.getElementById('edit-status').value = status;
